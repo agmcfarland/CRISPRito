@@ -1,0 +1,46 @@
+[project]
+name = "CRISPRito"
+version = "0.0.0"
+description = "Comprehensive nomination of CRISPR sites using using combined of CFD and BE methods"
+readme = "README.md"
+requires-python = ">=3.7"
+#license = {file = "LICENSE"}
+
+authors = [
+  {name = "Alexander McFarland"}
+]
+maintainers = [
+  {name = "Alexander McFarland"}
+]
+
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+  "biopython",
+  "numpy",
+  "pandas"
+]
+
+[project.optional-dependencies]
+dev = ["black"]
+test = ["pytest", "pytest-cov"]
+
+[project.urls]
+"Homepage" = "https://github.com/agmcfarland/CRISPRito/"
+"Bug Reports" = "https://github.com/agmcfarland/CRISPRito/issues"
+"Source" = "https://github.com/agmcfarland/CRISPRito/"
+
+# [project.scripts]
+# AAVengeRTest = "CRISPRito:main"
+
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["CRISPRito"]
