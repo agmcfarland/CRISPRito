@@ -1,7 +1,7 @@
 [project]
 name = "CRISPRito"
 version = "0.0.0"
-description = "Comprehensive nomination of CRISPR sites using using combined of CFD and BE methods"
+description = "Comprehensive nomination of CRISPR sites from cutting and editing data"
 readme = "README.md"
 requires-python = ">=3.7"
 #license = {file = "LICENSE"}
