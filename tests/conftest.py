@@ -14,5 +14,5 @@ def setup_temp_dir(tmp_path, scope="session", autouse=True):
     Fixture to set up a temporary dir for testing.
     """
     temp_dir = pjoin(tmp_path, "test_dir")
-    temp_dir.mkdir()
+    os.makedirs(temp_dir)
     return temp_dir

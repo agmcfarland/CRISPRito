@@ -57,12 +57,18 @@ def test_enforce_measurement_type(load_default_sample_manager_test_input):
 		samples.enforce_measurement_type()
 
 
+def test_write_samples_by_group(load_default_sample_manager_test_input, setup_temp_dir):
+	"""
+	pytest -sv tests/unit/test_SampleManager.py::test_write_samples_by_group
+	"""
+	samples = load_default_sample_manager_test_input
+	
+	samples.output_dir = setup_temp_dir
 
+	samples.write_samples_by_group()
 
+	assert '1_group_samplesheet.csv' in os.listdir(samples.output_dir)
 
+	assert '2_group_samplesheet.csv' in os.listdir(samples.output_dir)
 
-# input_crista_ptprc_reduced.csv
-# input_crisprme_ptprc_reduced.csv
-# input_iguide_gtsp6619_ptprc_reduced.csv
-# input_iguide_gtsp6616_ptprc_reduced.csv
 

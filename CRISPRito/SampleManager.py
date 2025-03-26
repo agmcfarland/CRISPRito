@@ -1,21 +1,22 @@
 import pandas as pd
 import uuid
 import os
+from os.path import join as pjoin
 
 class SampleManager:
 	allowed_measurements = [
 		'one_scaled',
 		'abundance'
 	]
-	def __init__(self, input_file, output_dir="sample_outputs"):
+	def __init__(self, input_file, output_dir="CRISPRito_output"):
 		"""
 		Initializes the SampleManager with an input file path.
 		
 		:param input_file: Path to the sample sheet containing sample data.
 		"""
 		self.input_file = input_file
+		self.output_dir = output_dir
 		self.table = None
-
 
 	def load_samplesheet(self):
 		self.table = pd.read_csv(self.input_file)
@@ -28,6 +29,17 @@ class SampleManager:
 		for i in self.table['measurement_type'].unique():
 			if i not in self.allowed_measurements:
 				raise ValueError(f'{i} not a valid measurment type.')
+
+	def write_samples_by_group(self):
+		unique_groups = list(self.table['cluster_group'].unique())
+		for ug in unique_groups:
+			self.table[self.table['cluster_group'] == ug].to_csv(pjoin(self.output_dir, f'{ug}_group_samplesheet.csv'), index = None)
+
+	def set_up(self):
+		self.load_samplesheet()
+		self.assign_unique_id()
+		self.enforce_measurement_type()
+		self.test_write_samples_by_group()
 
 
 	# def write_samples(self):
