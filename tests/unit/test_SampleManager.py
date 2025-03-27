@@ -65,6 +65,8 @@ def test_write_samples_by_group(load_default_sample_manager_test_input, setup_te
 	
 	samples.output_dir = setup_temp_dir
 
+	print(samples.output_dir)
+
 	samples.write_samples_by_group()
 
 	assert '1_group_samplesheet.csv' in os.listdir(samples.output_dir)

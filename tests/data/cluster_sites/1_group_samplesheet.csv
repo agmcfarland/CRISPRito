@@ -1,0 +1,4 @@
+sample,method,cluster_group,measurement_type,standard_format_file_path
+sample1,crista,1,one_scaled,/data/CRISPRito/tests/data/input_crista_ptprc_reduced.csv
+sample2,crisprme,1,one_scaled,/data/CRISPRito/tests/data/input_crisprme_ptprc_reduced.csv
+sample3,iguide,1,abundance,/data/CRISPRito/tests/data/input_iguide_gtsp6619_ptprc_reduced.csv
