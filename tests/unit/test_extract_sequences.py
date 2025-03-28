@@ -46,8 +46,7 @@ def test_retrieve_genome_slices_memoryview():
     assert isinstance(slices, dict)
     assert 10 in slices
     assert 20 in slices
-    print(slices[10])
     # Check actual extracted sequences
     assert slices[10] == "CGTACGTACG"
-    # assert slices[20] == "ACGTACGTG"
+    assert slices[20] == "TACGTACGTA"
 
