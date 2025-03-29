@@ -1,8 +1,8 @@
 import time
 import gzip
 from Bio import SeqIO
+from skbio.alignment import StripedSmithWaterman
 
-# Function 1: Dictionary-based Clustering
 def greedy_clustering_first(numbers, range_threshold):
 	"""
 	The current number is compared to the first item in the current cluster when 
@@ -16,8 +16,7 @@ def greedy_clustering_first(numbers, range_threshold):
 		if not current_cluster:
 			current_cluster.append(number)
 			continue
-		# The current number is compared against the last added number to the group
-		# if number - current_cluster[-1] <= range_threshold:
+		# The current number is compared against the first number of the group
 		if number - current_cluster[0] <= range_threshold:
 			current_cluster.append(number)
 		else:
@@ -43,7 +42,6 @@ def greedy_clustering_incremental(numbers, range_threshold):
 			continue
 		# The current number is compared against the last added number to the group
 		if number - current_cluster[-1] <= range_threshold:
-		# if number - current_cluster[0] <= range_threshold:
 			current_cluster.append(number)
 		else:
 			clusters[cluster_id] = current_cluster
@@ -66,6 +64,16 @@ def retrieve_genome_slices_memoryview(sequence, positions, flank_size):
 		start, end = max(0, pos - flank_size), pos + flank_size
 		slices[pos] = sequence[start:end].tobytes().decode()
 	return slices
+
+
+def align_sequence(prepped_query, target_sequence):
+	"""
+	Align sequence to a StripedSmithWaterman alignment object
+	"""
+	return prepped_query(target_sequence)
+
+
+
 
 # with gzip.open(genome_path2, 'rt') as infile:
 # 	print(infile)
