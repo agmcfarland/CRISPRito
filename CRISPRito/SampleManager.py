@@ -39,7 +39,7 @@ class SampleManager:
 		self.load_samplesheet()
 		self.assign_unique_id()
 		self.enforce_measurement_type()
-		self.test_write_samples_by_group()
+		self.write_samples_by_group()
 
 
 	# def write_samples(self):

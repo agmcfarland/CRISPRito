@@ -5,19 +5,20 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from io import StringIO
-from CRISPRito.Utils import align_sequence
-from skbio.alignment import StripedSmithWaterman
+from CRISPRito.Utils import parse_global_alignment
 from skbio.alignment import global_pairwise_align_nucleotide
+from skbio import DNA
 
+import time
 
 @pytest.fixture
 def target_list():
 	targets = [
-	# ['chr1:+:198706754', 0, 'tttcttttagatgaaaaatatgcaaacatcactgtggattacttatataacaaggaaacta'],
-	# ['chr2:-:143961596', 2,  'ttatgaaaatgacagagcattttccctcagtgatgttttcatatttataatttttgagaac'],
-	# ['chr3:+:138494328', 4,  'ctcattatttgtcagtaatatacaagcatcactgaggacacttatgtttggaaattcttta'],
-	# ['chr8:+:74745562', 5,  'attggagatgatagtctttatgtaaacatcactgtgggtttttttttcactgtaaataggc'],
-	['chr7:+:50816217', 6,  'cccaaagtataggcaacataggcataaataaatgggtttagatcacactataaagcttcta']
+	['chr1:+:198706754', 0, 'tttcttttagatgaaaaatatgcaaacatcactgtggattacttatataacaaggaaacta'.upper()],
+	['chr2:-:143961596', 2,  'ttatgaaaatgacagagcattttccctcagtgatgttttcatatttataatttttgagaac'.upper()],
+	['chr3:+:138494328', 4,  'ctcattatttgtcagtaatatacaagcatcactgaggacacttatgtttggaaattcttta'.upper()],
+	['chr8:+:74745562', 5,  'attggagatgatagtctttatgtaaacatcactgtgggtttttttttcactgtaaataggc'.upper()],
+	['chr7:+:50816217', 6,  'cccaaagtataggcaacataggcataaataaatgggtttagatcacactataaagcttcta'.upper()]
 	]
 	return targets
 
@@ -26,71 +27,59 @@ def test_aligner_works(target_list):
 	"""
 	pytest -sv tests/unit/test_align_sequence.py::test_aligner_works
 	"""
-	targets = target_list
-
-	aligner = StripedSmithWaterman('AAAATATGCAAACATCACTG', gap_open_penalty=1, gap_extend_penalty=1)
-	# result = aligner(targets[0][2])
-	# for k,v in result.items():
-	# 	print(k, v)
-
+	query_sequence = DNA('AAAATATGCAAACATCACTG')
 
 	print('\n')
 
-	for t in targets:
-		query = 'GAGTAGCGCGAGCACAGCTA'
-		result = align_sequence(aligner, t[2])
+	result_list = [(14, 33), (-1, -1), (14, 33), (14, 33), (14, 33)]
+
+	for e, t in enumerate(target_list):
 		print(t)
+		result = global_pairwise_align_nucleotide(query_sequence, DNA(t[2]))
+		# print(result)
+		parsed_result = parse_global_alignment(result)
+		# print(parsed_result)
+		assert parsed_result == result_list[e]
 
-		print('optimal_alignment_score: ', result.optimal_alignment_score)
-		print('suboptimal_alignment_score: ', result.suboptimal_alignment_score)
-		print('query_begin: ', result.query_begin)
-		print('query_end: ', result.query_end)
-		print('target_begin: ', result.target_begin)
-		print('target_end_optimal: ', result.target_end_optimal)
-		print('target_end_suboptimal: ', result.target_end_suboptimal)
-		print('cigar: ', result.cigar)
-		print('query_sequence: ', result.query_sequence)
-		print('target_sequence: ', result.target_sequence)
-		print('\n')
+def test_aligner_works_reverse_complement(target_list):
+	"""
+	pytest -sv tests/unit/test_align_sequence.py::test_aligner_works_reverse_complement
+	"""
+	query_sequence = str(Seq('AAAATATGCAAACATCACTG').reverse_complement())
 
-		new_target_sequence = ''
-		for e, i in enumerate(result.target_sequence):
-			if e >= result.target_begin:
-				if e <= result.target_end_optimal:
-					new_target_sequence += i.upper()
-					continue
+	query_sequence = DNA(query_sequence)
 
-			new_target_sequence += i
+	print('\n')
 
-		len(new_target_sequence) == len(result.target_sequence)
-		print('mine:  ', new_target_sequence, '\n')
+	result_list = [(17, 19), (27, 46), (38, 57), (-1, -1), (-1, -1)]
 
-		print('actual:', 'cccaaagtataggcAACATAGGCATAAATAAATGggtttagatcacactataaagcttcta', '\n')
+	for e, t in enumerate(target_list):
+		print(t)
+		result = global_pairwise_align_nucleotide(query_sequence, DNA(t[2]))
+		print(result)
+		parsed_result = parse_global_alignment(result)
+		print(parsed_result)
 
-# AAAATATGCAAACATCACTG
-# ..C...G...T.A..A.A..
-# ccc_a_aaagtataggcaacataggca_t_aaataaatgggtttagatcacactataaagcttcta
+		assert parsed_result == result_list[e]
 
 
-	# result = align_sequence(aligner, target)
+def test_time_complexity(target_list):
+	"""
+	pytest -sv tests/unit/test_align_sequence.py::test_speed
+	
+	Testing how processing time increases within increasing number of sequences. Single processor.
 
-	# for i in 
+	In general, 10 sequences = 0.5 seconds and this holds as sequence increases.
+	"""
+	query_sequence = DNA('AAAATATGCAAACATCACTG')
+	
+	for t in target_list:
+		print('\n',t)
+		start_time = time.time()
+		for z in [1, 10]:#, 100, 1000, 10000]:
+			for i in range(z):
+				global_pairwise_align_nucleotide(query_sequence, DNA(t[2]))
 
-	# print(result)
+				assert time.time()-start_time < 1
 
 
-# for i in ['chr1:+:198706754 ', 'chr2:-:143961596', 'chr3:+:138494328', 'chr8:+:74745562', 'chr7:+:50816217']:
-# 	chromosome = i.split(':')[0]
-# 	strand = i.split(':')[1]
-# 	position = int(i.split(':')[2])
-# 	upstream = position - 30
-# 	downstream = position + 30
-# 	print(f'https://genome.ucsc.edu/cgi-bin/das/hg38/dna?segment={chromosome}:{upstream},{downstream}')
-
-# [['chr1:+:198706754', 0, 'tttcttttagatgaaaaatatgcaaacatcactgtggattacttatataacaaggaaacta'],
-# ['chr2:-:143961596', 2,  'ttatgaaaatgacagagcattttccctcagtgatgttttcatatttataatttttgagaac'],
-# ['chr3:+:138494328', 4,  'ctcattatttgtcagtaatatacaagcatcactgaggacacttatgtttggaaattcttta'],
-# ['chr8:+:74745562', 5,  'attggagatgatagtctttatgtaaacatcactgtgggtttttttttcactgtaaataggc'],
-# ['chr7:+:50816217', 6,  'cccaaagtataggcaacataggcataaataaatgggtttagatcacactataaagcttcta']]
-
-# https://genome.ucsc.edu/cgi-bin/das/hg38/dna?segment=chr1:198706724,198706784

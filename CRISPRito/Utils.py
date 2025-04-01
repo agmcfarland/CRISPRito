@@ -1,6 +1,6 @@
 import time
 import gzip
-from numpy import numpy as np
+import numpy as np
 from Bio import SeqIO
 from skbio.alignment import StripedSmithWaterman
 
@@ -71,16 +71,17 @@ def parse_global_alignment(aln):
 	"""
 	aln is an is the raw output of global_pairwise_align_nucleotide(seq1, seq2)
 	"""
-	z = aln[0].conservation()
+	sequence_alignment = aln[0].conservation()
 
-	# record = []
-	# for e, i in enumerate(z):
-	# 	if not np.isnan(i):
-	# 		record.append(e)
+	alignment = np.where(~np.isnan(sequence_alignment))[0]
 
-	record = [e for e, i in enumerate(z) if not np.isnan(i)]
-	return (min(record), max(record))
-	# print(min(record), max(record))
+	record = [e for e, i in enumerate(sequence_alignment) if not np.isnan(i)]
+
+	if len(record) != 0:
+		return min(record), max(record)
+
+	return -1, -1
+
 
 
 def align_sequence(prepped_query, target_sequence):
