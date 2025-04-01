@@ -1,5 +1,6 @@
 import time
 import gzip
+from numpy import numpy as np
 from Bio import SeqIO
 from skbio.alignment import StripedSmithWaterman
 
@@ -64,6 +65,22 @@ def retrieve_genome_slices_memoryview(sequence, positions, flank_size):
 		start, end = max(0, pos - flank_size), pos + flank_size
 		slices[pos] = sequence[start:end].tobytes().decode()
 	return slices
+
+
+def parse_global_alignment(aln):
+	"""
+	aln is an is the raw output of global_pairwise_align_nucleotide(seq1, seq2)
+	"""
+	z = aln[0].conservation()
+
+	# record = []
+	# for e, i in enumerate(z):
+	# 	if not np.isnan(i):
+	# 		record.append(e)
+
+	record = [e for e, i in enumerate(z) if not np.isnan(i)]
+	return (min(record), max(record))
+	# print(min(record), max(record))
 
 
 def align_sequence(prepped_query, target_sequence):

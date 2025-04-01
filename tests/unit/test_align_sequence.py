@@ -7,14 +7,18 @@ from Bio.SeqRecord import SeqRecord
 from io import StringIO
 from CRISPRito.Utils import align_sequence
 from skbio.alignment import StripedSmithWaterman
+from skbio.alignment import global_pairwise_align_nucleotide
+
 
 @pytest.fixture
 def target_list():
-	targets = [['chr1:+:198706754', 0, 'tttcttttagatgaaaaatatgcaaacatcactgtggattacttatataacaaggaaacta'],
-	['chr2:-:143961596', 2,  'ttatgaaaatgacagagcattttccctcagtgatgttttcatatttataatttttgagaac'],
-	['chr3:+:138494328', 4,  'ctcattatttgtcagtaatatacaagcatcactgaggacacttatgtttggaaattcttta'],
-	['chr8:+:74745562', 5,  'attggagatgatagtctttatgtaaacatcactgtgggtttttttttcactgtaaataggc'],
-	['chr7:+:50816217', 6,  'cccaaagtataggcaacataggcataaataaatgggtttagatcacactataaagcttcta']]
+	targets = [
+	# ['chr1:+:198706754', 0, 'tttcttttagatgaaaaatatgcaaacatcactgtggattacttatataacaaggaaacta'],
+	# ['chr2:-:143961596', 2,  'ttatgaaaatgacagagcattttccctcagtgatgttttcatatttataatttttgagaac'],
+	# ['chr3:+:138494328', 4,  'ctcattatttgtcagtaatatacaagcatcactgaggacacttatgtttggaaattcttta'],
+	# ['chr8:+:74745562', 5,  'attggagatgatagtctttatgtaaacatcactgtgggtttttttttcactgtaaataggc'],
+	['chr7:+:50816217', 6,  'cccaaagtataggcaacataggcataaataaatgggtttagatcacactataaagcttcta']
+	]
 	return targets
 
 
@@ -24,7 +28,7 @@ def test_aligner_works(target_list):
 	"""
 	targets = target_list
 
-	aligner = StripedSmithWaterman('AAAATATGCAAACATCACTG', gap_open_penalty=2, gap_extend_penalty=1, score_size = 0)
+	aligner = StripedSmithWaterman('AAAATATGCAAACATCACTG', gap_open_penalty=1, gap_extend_penalty=1)
 	# result = aligner(targets[0][2])
 	# for k,v in result.items():
 	# 	print(k, v)
@@ -49,8 +53,23 @@ def test_aligner_works(target_list):
 		print('target_sequence: ', result.target_sequence)
 		print('\n')
 
+		new_target_sequence = ''
+		for e, i in enumerate(result.target_sequence):
+			if e >= result.target_begin:
+				if e <= result.target_end_optimal:
+					new_target_sequence += i.upper()
+					continue
 
+			new_target_sequence += i
 
+		len(new_target_sequence) == len(result.target_sequence)
+		print('mine:  ', new_target_sequence, '\n')
+
+		print('actual:', 'cccaaagtataggcAACATAGGCATAAATAAATGggtttagatcacactataaagcttcta', '\n')
+
+# AAAATATGCAAACATCACTG
+# ..C...G...T.A..A.A..
+# ccc_a_aaagtataggcaacataggca_t_aaataaatgggtttagatcacactataaagcttcta
 
 
 	# result = align_sequence(aligner, target)
