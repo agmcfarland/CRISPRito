@@ -36,9 +36,13 @@ class SampleManager:
 			self.table[self.table['cluster_group'] == ug].to_csv(pjoin(self.output_dir, f'{ug}_group_samplesheet.csv'), index = None)
 
 	def set_up(self):
+		
 		self.load_samplesheet()
+		
 		self.assign_unique_id()
+		
 		self.enforce_measurement_type()
+
 		self.write_samples_by_group()
 
 

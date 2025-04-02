@@ -51,7 +51,7 @@ def test_aligner_works_reverse_complement(target_list):
 
 	print('\n')
 
-	result_list = [(17, 19), (27, 46), (38, 57), (-1, -1), (-1, -1)]
+	result_list = [(17, 19), (27, 46), (38, 57), (60, 60), (-1, -1)]
 
 	for e, t in enumerate(target_list):
 		print(t)

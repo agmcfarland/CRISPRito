@@ -1,4 +1,4 @@
-sample,method,cluster_group,measurement_type,standard_format_file_path
-sample1,crista,1,one_scaled,/data/CRISPRito/tests/data/input_crista_ptprc_reduced.csv
-sample2,crisprme,1,one_scaled,/data/CRISPRito/tests/data/input_crisprme_ptprc_reduced.csv
-sample3,iguide,1,abundance,/data/CRISPRito/tests/data/input_iguide_gtsp6619_ptprc_reduced.csv
+sample,method,cluster_group,measurement_type,standard_format_file_path,id
+sample1,crista,1,one_scaled,/data/CRISPRito/tests/data/input_crista_ptprc_reduced.csv,76c0a0c1-20d7-415b-b659-098682cbbc41
+sample2,crisprme,1,one_scaled,/data/CRISPRito/tests/data/input_crisprme_ptprc_reduced.csv,ec5311b1-dd3a-4d42-911e-e644541912a8
+sample3,iguide,1,abundance,/data/CRISPRito/tests/data/input_iguide_gtsp6619_ptprc_reduced.csv,d3a515b5-65a9-41ee-94bc-a058d147c74a

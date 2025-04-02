@@ -73,6 +73,27 @@ def test_write_samples_by_group(load_default_sample_manager_test_input, setup_te
 
 	assert '2_group_samplesheet.csv' in os.listdir(samples.output_dir)
 
+def test_ensemble_method(load_default_sample_manager_test_input, setup_temp_dir):
+	"""
+	pytest -sv tests/unit/test_SampleManager.py::test_ensemble_method
+	"""
+	samples = load_default_sample_manager_test_input
+	
+	samples.output_dir = setup_temp_dir
+
+	print(samples.output_dir)
+
+	samples.assign_unique_id()
+
+	samples.enforce_measurement_type()
+
+	samples.write_samples_by_group()
+
+	assert '1_group_samplesheet.csv' in os.listdir(samples.output_dir)
+
+	assert '2_group_samplesheet.csv' in os.listdir(samples.output_dir)
+
+
 
 
 

@@ -1,4 +1,4 @@
-chromosome,strand,position,abund
+chromosome,strand,position,score
 chr1,+,198706754,1271
 chr2,-,143961596,1066
 chr3,+,138494328,553

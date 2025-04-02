@@ -1,2 +1,2 @@
-sample,method,cluster_group,measurement_type,standard_format_file_path
-sample4,iguide,2,abundance,/data/CRISPRito/tests/data/input_iguide_gtsp6616_ptprc_reduced.csv
+sample,method,cluster_group,measurement_type,standard_format_file_path,id
+sample4,iguide,2,abundance,/data/CRISPRito/tests/data/input_iguide_gtsp6616_ptprc_reduced.csv,a69a9460-4d54-47d7-b79a-4fd9bdb889f2

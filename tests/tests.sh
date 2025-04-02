@@ -10,4 +10,5 @@ python -m pytest -sv tests/unit/test_greedy_clustering.py
 
 python -m pytest -sv tests/unit/test_extract_sequences.py
 
+python -m pytest -sv tests/unit/test_StandardCuts.py
 
