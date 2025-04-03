@@ -56,6 +56,9 @@ class StandardCuts:
 
 		self.df_cut_sites = df_clustered_cuts 
 
+	# def extract_cut_region():
+		# pass
+
 	
 
 

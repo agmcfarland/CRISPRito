@@ -55,12 +55,43 @@ def test_aligner_works_reverse_complement(target_list):
 
 	for e, t in enumerate(target_list):
 		print(t)
+
 		result = global_pairwise_align_nucleotide(query_sequence, DNA(t[2]))
 		print(result)
 		parsed_result = parse_global_alignment(result)
 		print(parsed_result)
 
 		assert parsed_result == result_list[e]
+
+
+def test_aligner_works_reverse_complement_sequence_and_NGG(target_list):
+	"""
+	pytest -sv tests/unit/test_align_sequence.py::test_aligner_works_reverse_complement_sequence_and_NGG
+	Will produce a worse alignment for last item in target_list
+	"""
+	query_sequence = 'AAAATATGCAAACATCACTG'+'-GG'
+
+	query_sequence = DNA(query_sequence)
+
+	print('\n')
+
+	result_list = [(14, 36), (14, 36), (14, 36), (14, 36), (60, 60)]
+
+	for e, t in enumerate(target_list):
+		subject_seq = t[2]
+		if t[0].find('-') > -1:
+			subject_seq = str(Seq(subject_seq).reverse_complement())
+
+		subject_seq = DNA(subject_seq)
+
+		print(t)
+		result = global_pairwise_align_nucleotide(query_sequence, subject_seq)
+		# print(result)
+		parsed_result = parse_global_alignment(result)
+		print(parsed_result)
+
+		assert parsed_result == result_list[e]
+
 
 
 def test_time_complexity(target_list):
@@ -81,5 +112,6 @@ def test_time_complexity(target_list):
 				global_pairwise_align_nucleotide(query_sequence, DNA(t[2]))
 
 				assert time.time()-start_time < 1
+
 
 

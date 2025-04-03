@@ -16,3 +16,10 @@ def setup_temp_dir(tmp_path, scope="session", autouse=True):
     temp_dir = pjoin(tmp_path, "test_dir")
     os.makedirs(temp_dir)
     return temp_dir
+
+
+@pytest.fixture
+def path_to_hg38_genome(scope = 'session', autouse = True):
+	"""
+	"""
+	return '/data/GenomicTrackRepository/data/processed/hg38'

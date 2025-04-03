@@ -40,7 +40,7 @@ def test_load_cut_sites_group1(load_1_group_samplesheet_ptprc):
 
 	standard_group.cluster_cut_sites()
 
-	print('\n')
+	# print('\n')
 
 	# print(standard_group.df_cut_sites)
 
@@ -63,7 +63,7 @@ def test_load_cut_sites_group2(load_2_group_samplesheet_ptprc):
 
 	standard_group.cluster_cut_sites()
 
-	print('\n')
+	# print('\n')
 
 	# print(standard_group.df_cut_sites)
 
