@@ -22,4 +22,4 @@ def setup_temp_dir(tmp_path, scope="session", autouse=True):
 def path_to_hg38_genome(scope = 'session', autouse = True):
 	"""
 	"""
-	return '/data/GenomicTrackRepository/data/processed/hg38'
+	return '/data/GenomicTrackRepository/data/processed/hg38/hg38.fasta.gz'

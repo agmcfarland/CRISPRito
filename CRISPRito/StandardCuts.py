@@ -1,11 +1,12 @@
 import pandas as pd
 from os.path import join as pjoin
-from CRISPRito.Utils import greedy_clustering_incremental
+from CRISPRito.Utils import greedy_clustering_incremental, retrieve_genome_slices_memoryview, genome_to_dict_memoryview
 
 class StandardCuts:
 
-	def __init__(self, sample_sheet):
+	def __init__(self, sample_sheet, flank_size = 30):
 		self.sample_sheet = sample_sheet
+		self.flank_size = flank_size
 		pass
 
 	def load_cut_sites(self):
@@ -56,17 +57,61 @@ class StandardCuts:
 
 		self.df_cut_sites = df_clustered_cuts 
 
+	def load_genome(self, genome_path):
+		self.genome = genome_to_dict_memoryview(genome_path)
+
+	def extract_cut_region(self):
+		"""
+		Iterate through list of positions, grouped by chromosome, and extract self.flank size bp from the mean predicted position 
+		"""
+
+		df_reference = self.df_cut_sites.copy()
+
+		df_reference['reference_position'] = df_reference.groupby('cut_cluster')['position'].transform('mean').astype(int)
+
+		df_reference = df_reference[['chromosome', 'strand', 'cut_cluster', 'reference_position']].drop_duplicates()
+
+		chromosome_groups = df_reference.groupby(['chromosome'])
+
+		df_sequence = pd.DataFrame()
+
+		for group_name, df_group in chromosome_groups:
+
+			chromosome_ = df_group['chromosome'].unique().item()
+
+			slices = retrieve_genome_slices_memoryview(sequence = self.genome[chromosome_], positions = df_group['reference_position'], flank_size = self.flank_size)
+
+			df_group['cut_region'] = df_group['reference_position'].map(slices)
+
+			df_sequence = pd.concat([df_sequence, df_group])
+
+		self.df_reference_cut_sites = df_sequence
+
+
+	def build_cut_sites(self):
+		"""
+		"""
+
+
+
+
+
 	# def extract_cut_region():
 		# pass
 
-	
+		
 
 
 class CutSite:
 
-	def __init__(self):
-		pass
+	def __init__(self, chromosome, strand, sequence, sgRNA, ):
+		self.chromosome = chromosome
+		self.strand = strand
+		self.sequence = sequence
+		self.sgRNA = sgRNA
 
+
+	# def 
 
 
 
