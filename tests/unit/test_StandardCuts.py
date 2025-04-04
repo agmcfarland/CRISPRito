@@ -73,6 +73,25 @@ def test_load_cut_sites_group2(load_2_group_samplesheet_ptprc):
 	assert len(standard_group.df_cut_sites) == 5
 
 
+def test_standarize_scores(load_1_group_samplesheet_ptprc):
+	"""
+
+	"""
+
+	standard_group = StandardCuts(sample_sheet = load_1_group_samplesheet_ptprc)	
+
+	standard_group.load_cut_sites()
+
+	standard_group.cluster_cut_sites()
+
+	# print('\n')
+
+	# print(standard_group.df_cut_sites)
+
+	standard_group.update_cut_cluster_id()
+
+	
+
 def skip_test_extract_cut_region_group1(load_1_group_samplesheet_ptprc, path_to_hg38_genome):
 	"""
 	pytest -sv tests/unit/test_StandardCuts.py::test_extract_cut_region_group1
@@ -93,7 +112,6 @@ def skip_test_extract_cut_region_group1(load_1_group_samplesheet_ptprc, path_to_
 	# print(standard_group.df_reference_cut_sites)
 
 	assert len(standard_group.df_reference_cut_sites) == 15
-
 
 	# standard_group.df_reference_cut_sites.to_csv('/data/CRISPRito/1_group_cluster_regions_ptprc.csv', index = None)
 

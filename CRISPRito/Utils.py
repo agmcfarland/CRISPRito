@@ -5,6 +5,8 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from skbio import DNA
 from skbio.alignment import global_pairwise_align_nucleotide
+from scipy.stats import zscore
+from sklearn.preprocessing import MinMaxScaler
 
 def greedy_clustering_first(numbers, range_threshold):
 	"""
@@ -84,6 +86,37 @@ def parse_global_alignment(aln):
 		return min(record), max(record)
 
 	return -1, -1
+
+
+def numpy_list_converter(func):
+    """
+    Decorator to ensure list is converted to numpy array and returned as a flattened list
+    """
+    def wrapper(score, *args, **kwargs):
+        if isinstance(score, list):
+            score = np.array(score)
+        result = func(score, *args, **kwargs)
+        return result.flatten().tolist()
+    return wrapper
+
+@numpy_list_converter
+def scale_min_max(score:list):
+
+	scaler = MinMaxScaler(feature_range=(0, 1))
+
+	scaled_score = scaler.fit_transform(score.reshape(-1,1))
+
+	return scaled_score
+
+@numpy_list_converter
+def scale_zscore(score:list, degrees_of_freedom = 0):
+
+	scaled_score = zscore(score, ddof = degrees_of_freedom)
+
+	return scaled_score
+
+
+
 
 
 

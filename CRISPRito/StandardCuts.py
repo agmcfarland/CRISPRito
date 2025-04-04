@@ -40,7 +40,7 @@ class StandardCuts:
 
 		cluster_id_start_ = 0
 		
-		for group_name, df_group in grouped_cuts:
+		for _, df_group in grouped_cuts:
 
 			cluster_groups = greedy_clustering_incremental(df_group['position'].tolist(), range_threshold = range_threshold)
 
@@ -75,7 +75,7 @@ class StandardCuts:
 
 		df_sequence = pd.DataFrame()
 
-		for group_name, df_group in chromosome_groups:
+		for _, df_group in chromosome_groups:
 
 			chromosome_ = df_group['chromosome'].unique().item()
 
@@ -104,12 +104,17 @@ class StandardCuts:
 
 class CutSite:
 
-	def __init__(self, chromosome, strand, sequence, sgRNA, ):
+	self.__len__ = len(self.detail)
+
+	def __init__(self, chromosome, strand, cut_region, sgRNA, detail):
 		self.chromosome = chromosome
 		self.strand = strand
-		self.sequence = sequence
+		self.cut_region = cut_region
 		self.sgRNA = sgRNA
+		self.detail = detail
 
+	def __len__(self):
+		return len(self.detail) 
 
 	# def 
 
