@@ -1,5 +1,7 @@
 from unittest.mock import Mock
 from os.path import join as pjoin
+import gzip
+import tempfile
 import pytest
 import os
 import pathlib
@@ -23,3 +25,13 @@ def path_to_hg38_genome(scope = 'session', autouse = True):
 	"""
 	"""
 	return '/data/GenomicTrackRepository/data/processed/hg38/hg38.fasta.gz'
+
+
+@pytest.fixture
+def sample_fasta_gz(scope = 'session', autouse = True):
+    """Creates a temporary gzipped FASTA file for testing."""
+    fasta_content = '>chr1\nACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT\n>chr2\nTTTTGGGGCCCCAAAATTTTGGGGCCCCAAAATTTTGGGGCCCCAAAATTTTGGGGCCCCAAAA'
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".fa.gz") as tmp_fasta:
+        with gzip.open(tmp_fasta.name, "wt") as f:
+            f.write(fasta_content)
+        return tmp_fasta.name  # Return the file path

@@ -1,13 +1,33 @@
 import pandas as pd
+import os
 from os.path import join as pjoin
-from CRISPRito.Utils import greedy_clustering_incremental, retrieve_genome_slices_memoryview, genome_to_dict_memoryview
+from Bio.Seq import Seq
+from skbio import DNA
+from skbio.alignment import global_pairwise_align_nucleotide
+from CRISPRito.Utils import (
+	greedy_clustering_incremental,
+	retrieve_genome_slices_memoryview,
+	genome_to_dict_memoryview,
+	zscore,
+	scale_min_max,
+	parse_global_alignment
+	)
+
 
 class StandardCuts:
 
-	def __init__(self, sample_sheet, flank_size = 30):
+	def __init__(self, sample_sheet:pd.DataFrame, flank_size:int = 30, sgRNA:str = ''):
 		self.sample_sheet = sample_sheet
 		self.flank_size = flank_size
-		pass
+		self.sgRNA = {
+			'fwd' : DNA(sgRNA),
+			'fwd_NGG' : DNA(sgRNA + '-GG')
+		}
+		self.sgRNA_alignment_tolerance = {
+			'fwd' : range(18,21),
+			'fwd_NGG' : range(19,24)
+		}
+		
 
 	def load_cut_sites(self):
 
@@ -57,8 +77,22 @@ class StandardCuts:
 
 		self.df_cut_sites = df_clustered_cuts 
 
+	def standardize_scores(self):
+
+		self.df_cut_sites['zscore'] = self.df_cut_sites.groupby('id')['score'].transform(lambda x: zscore(x.tolist(), ddof = 0))
+
+		self.df_cut_sites['min_max'] = self.df_cut_sites.groupby('id')['score'].transform(lambda x: scale_min_max(x.tolist()))
+
+
 	def load_genome(self, genome_path):
+		if not os.path.exists(genome_path):
+			raise FileNotFoundError(f"Genome file not found: {genome_path}")
 		self.genome = genome_to_dict_memoryview(genome_path)
+
+	def get_genome_size(self):
+		self.genome_size = {}
+		for k, v in self.genome.items():
+			self.genome_size[k] = len(v)
 
 	def extract_cut_region(self):
 		"""
@@ -92,6 +126,25 @@ class StandardCuts:
 		"""
 		"""
 
+		self.cut_sites = []
+
+		for _, row in self.df_reference_cut_sites.iterrows():
+			
+			df_cluster_subset = self.df_cut_sites[self.df_cut_sites['cut_cluster'] == row.cut_cluster]
+			
+			df_cluster_subset = df_cluster_subset[['position', 'score', 'id']]
+
+			standard_cut = CutSite(
+				chromosome = row.chromosome,
+				strand = row.strand,
+				ref_position = row.reference_position,
+				cut_region = row.cut_region,
+				sgRNA = self.sgRNA,
+				sgRNA_alignment_tolerance = self.sgRNA_alignment_tolerance,
+				detail = df_cluster_subset
+				)
+
+			self.cut_sites.append(standard_cut)
 
 
 
@@ -104,17 +157,48 @@ class StandardCuts:
 
 class CutSite:
 
-	self.__len__ = len(self.detail)
-
-	def __init__(self, chromosome, strand, cut_region, sgRNA, detail):
+	def __init__(self, chromosome, strand, ref_position, cut_region, sgRNA, sgRNA_alignment_tolerance, detail):
 		self.chromosome = chromosome
 		self.strand = strand
+		self.ref_position = ref_position
 		self.cut_region = cut_region
 		self.sgRNA = sgRNA
+		self.sgRNA_alignment_tolerance = sgRNA_alignment_tolerance
 		self.detail = detail
+		self.alignment = {}
 
 	def __len__(self):
 		return len(self.detail) 
+
+	def __repr__(self):
+		return f"CutSite(chrom={self.chromosome}, strand={self.strand}, ref_pos={self.ref_position}, cuts={len(self)})"
+
+	def find_best_sgRNA_alignment(self):
+
+		if self.strand == '-':
+			sequence = DNA(str(Seq(self.cut_region).reverse_complement()))
+		else:
+			sequence = DNA(self.cut_region)
+
+		for seqname, query_seq in self.sgRNA.items():
+			self.alignment['sgRNA'] = seqname
+
+			self.alignment['alignment'] = global_pairwise_align_nucleotide(query_seq, sequence)
+
+			self.alignment['alignment_start'], self.alignment['alignment_stop'] = parse_global_alignment(self.alignment['alignment'])
+
+			self.alignment['alignment_length'] = self.alignment['alignment_stop'] - self.alignment['alignment_start']
+
+			if self.alignment['alignment_length'] in self.sgRNA_alignment_tolerance:
+				break
+
+	def print_alignment_stats(self):
+		for k,v in self.alignment.items():
+			print(f'{k}: {v}')
+
+
+	def calculate():
+		pass
 
 	# def 
 

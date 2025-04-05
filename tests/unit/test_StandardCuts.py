@@ -75,7 +75,7 @@ def test_load_cut_sites_group2(load_2_group_samplesheet_ptprc):
 
 def test_standarize_scores(load_1_group_samplesheet_ptprc):
 	"""
-
+	pytest -sv tests/unit/test_StandardCuts.py::test_standarize_scores
 	"""
 
 	standard_group = StandardCuts(sample_sheet = load_1_group_samplesheet_ptprc)	
@@ -84,13 +84,28 @@ def test_standarize_scores(load_1_group_samplesheet_ptprc):
 
 	standard_group.cluster_cut_sites()
 
-	# print('\n')
-
-	# print(standard_group.df_cut_sites)
-
 	standard_group.update_cut_cluster_id()
 
-	
+	standard_group.standardize_scores()
+
+	assert 'zscore' in standard_group.df_cut_sites.columns
+
+	assert 'min_max' in standard_group.df_cut_sites.columns
+
+
+def test_load_genome_and_get_size(load_1_group_samplesheet_ptprc, sample_fasta_gz):
+	"""
+	pytest -sv tests/unit/test_StandardCuts.py::test_load_genome_and_get_size
+	"""
+
+	standard_group = StandardCuts(sample_sheet = load_1_group_samplesheet_ptprc)	
+
+	standard_group.load_genome(sample_fasta_gz)
+	standard_group.get_genome_size()
+
+	print(standard_group.genome_size)
+
+
 
 def skip_test_extract_cut_region_group1(load_1_group_samplesheet_ptprc, path_to_hg38_genome):
 	"""
@@ -139,13 +154,18 @@ def skip_test_extract_cut_region_group2(load_2_group_samplesheet_ptprc, path_to_
 	assert len(standard_group.df_reference_cut_sites) == 5
 
 
+def test_get_genome_size():
+	"""
+	pytest -sv tests/unit/test_StandardCuts.py::test_extract_cut_region_group2
+	"""
+
 
 def test_build_cut_sites(load_1_group_samplesheet_ptprc, project_test_data_directory):
 	"""
 	pytest -sv tests/unit/test_StandardCuts.py::test_build_cut_sites
 	"""
 
-	standard_group = StandardCuts(sample_sheet = load_1_group_samplesheet_ptprc)	
+	standard_group = StandardCuts(sample_sheet = load_1_group_samplesheet_ptprc, sgRNA = 'AAAATATGCAAACATCACTG')	
 
 	standard_group.load_cut_sites()
 
@@ -153,24 +173,65 @@ def test_build_cut_sites(load_1_group_samplesheet_ptprc, project_test_data_direc
 
 	standard_group.update_cut_cluster_id()
 
+	standard_group.standardize_scores()
+
 	# standard_group.load_genome(genome_path = path_to_hg38_genome)
 
 	# standard_group.extract_cut_region()
 	with patch.object(standard_group, 'extract_cut_region', return_value = pd.read_csv(pjoin(project_test_data_directory, 'cluster_sites', '1_group_cluster_regions_ptprc.csv'))):
 		standard_group.df_reference_cut_sites = standard_group.extract_cut_region()	
 
-	print(standard_group.df_reference_cut_sites)
-
-	print(standard_group.df_cut_sites)
-
-	# standard_group.df_reference_cut_sites = pd.read_csv(pjoin(project_test_data_directory, 'cluster_sites', '1_group_cluster_regions_ptprc.csv'))
-
 	# print(standard_group.df_reference_cut_sites)
 
-	# print(standard_group.df_reference_cut_sites)
+	# print(standard_group.df_cut_sites)
+
+	standard_group.build_cut_sites()
+
+	for standard_cut in standard_group.cut_sites:
+		print(standard_cut)
+
+	assert len(standard_group.cut_sites) == 15
+
+@pytest.fixture
+def standard_group_1_ptprc_cut_sites(load_1_group_samplesheet_ptprc, project_test_data_directory):
+
+	standard_group = StandardCuts(sample_sheet = load_1_group_samplesheet_ptprc, sgRNA = 'AAAATATGCAAACATCACTG')	
+
+	standard_group.load_cut_sites()
+
+	standard_group.cluster_cut_sites()
+
+	standard_group.update_cut_cluster_id()
+
+	standard_group.standardize_scores()
+
+	# standard_group.load_genome(genome_path = path_to_hg38_genome)
+
+	# standard_group.extract_cut_region()
+	with patch.object(standard_group, 'extract_cut_region', return_value = pd.read_csv(pjoin(project_test_data_directory, 'cluster_sites', '1_group_cluster_regions_ptprc.csv'))):
+		standard_group.df_reference_cut_sites = standard_group.extract_cut_region()	
+
+	standard_group.build_cut_sites()
+
+	return standard_group
+
+
+def test_cut_site_alignment(standard_group_1_ptprc_cut_sites):
+	"""
+	pytest -sv tests/unit/test_StandardCuts.py::test_cut_site_alignment
+	"""
+
+	standard_group = standard_group_1_ptprc_cut_sites
+
+	for standard_cut in standard_group.cut_sites:
+
+		print(standard_cut)
+
+		standard_cut.find_best_sgRNA_alignment()
 
 
 
+	# print(len(standard_group.cut_sites))
 
 
 
