@@ -35,3 +35,10 @@ def sample_fasta_gz(scope = 'session', autouse = True):
         with gzip.open(tmp_fasta.name, "wt") as f:
             f.write(fasta_content)
         return tmp_fasta.name  # Return the file path
+
+
+@pytest.fixture
+def example_hg38_genome_size(scope = 'session', autouse = True):
+	"""
+	"""
+	

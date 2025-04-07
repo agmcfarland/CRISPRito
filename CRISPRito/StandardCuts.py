@@ -141,6 +141,7 @@ class StandardCuts:
 				cut_region = row.cut_region,
 				sgRNA = self.sgRNA,
 				sgRNA_alignment_tolerance = self.sgRNA_alignment_tolerance,
+				chromosome_size = self.genome_size[row.chromosome],
 				detail = df_cluster_subset
 				)
 
@@ -157,7 +158,7 @@ class StandardCuts:
 
 class CutSite:
 
-	def __init__(self, chromosome, strand, ref_position, cut_region, sgRNA, sgRNA_alignment_tolerance, detail):
+	def __init__(self, chromosome, strand, ref_position, cut_region, sgRNA, sgRNA_alignment_tolerance, detail, chromosome_size):
 		self.chromosome = chromosome
 		self.strand = strand
 		self.ref_position = ref_position
@@ -165,6 +166,7 @@ class CutSite:
 		self.sgRNA = sgRNA
 		self.sgRNA_alignment_tolerance = sgRNA_alignment_tolerance
 		self.detail = detail
+		self.chromosome_size = chromosome_size
 		self.alignment = {}
 
 	def __len__(self):
