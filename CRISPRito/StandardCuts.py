@@ -33,6 +33,7 @@ class StandardCuts:
 			'fwd' : 0,
 			'fwd_NGG' : 3
 		}
+		self.cut_distance = 3
 		
 
 	def load_cut_sites(self):
@@ -148,7 +149,6 @@ class StandardCuts:
 				sgRNA = self.sgRNA,
 				sgRNA_alignment_tolerance = self.sgRNA_alignment_tolerance,
 				sgRNA_alignment_start_offset = self.sgRNA_alignment_start_offset,
-				chromosome_size = self.genome_size[row.chromosome],
 				flank_size = self.flank_size,
 				detail = df_cluster_subset
 				)
@@ -166,7 +166,7 @@ class StandardCuts:
 
 class CutSite:
 
-	def __init__(self, chromosome, strand, ref_position, cut_region, sgRNA, sgRNA_alignment_tolerance, sgRNA_alignment_start_offset, detail, chromosome_size, flank_size):
+	def __init__(self, chromosome, strand, ref_position, cut_region, sgRNA, sgRNA_alignment_tolerance, sgRNA_alignment_start_offset, cut_distance, detail, flank_size):
 		self.chromosome = chromosome
 		self.strand = strand
 		self.ref_position = ref_position
@@ -187,8 +187,10 @@ class CutSite:
 		self.sgRNA_alignment_tolerance = sgRNA_alignment_tolerance
 		self.sgRNA_alignment_start_offset = sgRNA_alignment_start_offset
 
+		self.cut_distance = cut_distance
+
 		self.detail = detail
-		self.chromosome_size = chromosome_size
+
 		self.flank_size = flank_size
 		self.alignment = {}
 
@@ -220,7 +222,9 @@ class CutSite:
 
 			self.alignment['alignment_length'] = len(self.alignment['aligned_sequence'])
 
-			self.alignment['PAM'] = self.cut_region['sequence'][self.alignment['local_stop'] + 1 : self.alignment['local_stop'] + 3]
+			self.alignment['PAM'] = self.cut_region['sequence'][self.alignment['local_stop'] + 1 : self.alignment['local_stop'] + 1 + 3]
+
+			self.alignmen['local_cut'] = self.alignment['local_stop'] - self.cut_distance
 
 			if self.alignment['alignment_length'] in self.sgRNA_alignment_tolerance[seqname]:
 				break
@@ -231,15 +235,17 @@ class CutSite:
 
 	def calculate_global_positions(self):
 		if self.strand == '-':
-			self.protospacer = {
-				'stop': self.cut_region['stop'] - self.alignment['local_start'],
-				'start': self.cut_region['stop'] - self.alignment['local_stop']
+			self.global_position = {
+				'protospacer_stop': self.cut_region['stop'] - self.alignment['local_start'],
+				'protospacer_start': self.cut_region['stop'] - self.alignment['local_stop']
 				}
+			self.global_position['cut'] = self.global_position['start'] + self.cut_distance	
 		else:
 			self.protospacer = {
-				'stop': self.cut_region['start'] + self.alignment['local_start'],
-				'start': self.cut_region['start'] + self.alignment['local_stop']
+				'protospacer_stop': self.cut_region['start'] + self.alignment['local_start'],
+				'protospacer_start': self.cut_region['start'] + self.alignment['local_stop']
 				}
+			self.global_position['cut'] = self.global_position['start'] - self.cut_distance	
 
 
 

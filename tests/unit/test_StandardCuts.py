@@ -231,24 +231,67 @@ def standard_group_1_ptprc_cut_sites(load_1_group_samplesheet_ptprc, project_tes
 def test_cut_site_alignment(standard_group_1_ptprc_cut_sites):
 	"""
 	pytest -sv tests/unit/test_StandardCuts.py::test_cut_site_alignment
+	Using PAM sequence to identify correct since this relies on local_start and local_stop being correct
+	"""
+
+	expected =[
+		'AGG',
+		'TGG',
+		'TGG',
+		'CGG',
+		'TGG',
+		'AGG',
+		'TGG',
+		'GTG',
+		'AGG',
+		'AGT',
+		'AGC',
+		'AGA',
+		'AGG',
+		'GGG',
+		'TGG']
+
+	standard_group = standard_group_1_ptprc_cut_sites
+
+	for e, standard_cut in enumerate(standard_group.cut_sites):
+		# print('\n')
+
+		# print(standard_cut)
+
+		standard_cut.find_best_sgRNA_alignment()
+
+		assert standard_cut.alignment['PAM'] == expected[e]
+
+		# standard_cut.print_alignment_stats()
+		# break
+
+
+def test_calculate_global_positions(standard_group_1_ptprc_cut_sites):
+	"""
+	pytest -sv tests/unit/test_StandardCuts.py::test_calculate_global_positions
 	"""
 
 	standard_group = standard_group_1_ptprc_cut_sites
 
-	for standard_cut in standard_group.cut_sites:
+	print('\n')
+	for e, standard_cut in enumerate(standard_group.cut_sites):
+		
+		# print('\n')
 
-		print(standard_cut)
+		# print(standard_cut)
 
 		standard_cut.find_best_sgRNA_alignment()
 
-		standard_cut.print_alignment_stats()
-		break
+		standard_cut.calculate_global_positions()
+
+		if standard_cut.strand == '-':
+			assert standard_cut.protospacer['stop'] > standard_cut.protospacer['start']
+		else:
+			assert standard_cut.protospacer['start'] > standard_cut.protospacer['stop']
+		
+		print(standard_cut.protospacer)
 
 
-
-
-
-	# print(len(standard_group.cut_sites))
 
 
 
