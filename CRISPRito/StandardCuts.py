@@ -28,6 +28,11 @@ class StandardCuts:
 			'fwd' : range(18,21),
 			'fwd_NGG' : range(20,25)
 		}
+
+		self.sgRNA_alignment_start_offset = {
+			'fwd' : 0,
+			'fwd_NGG' : 3
+		}
 		
 
 	def load_cut_sites(self):
@@ -142,6 +147,7 @@ class StandardCuts:
 				cut_region = row.cut_region,
 				sgRNA = self.sgRNA,
 				sgRNA_alignment_tolerance = self.sgRNA_alignment_tolerance,
+				sgRNA_alignment_start_offset = self.sgRNA_alignment_start_offset,
 				chromosome_size = self.genome_size[row.chromosome],
 				flank_size = self.flank_size,
 				detail = df_cluster_subset
@@ -160,7 +166,7 @@ class StandardCuts:
 
 class CutSite:
 
-	def __init__(self, chromosome, strand, ref_position, cut_region, sgRNA, sgRNA_alignment_tolerance, detail, chromosome_size, flank_size):
+	def __init__(self, chromosome, strand, ref_position, cut_region, sgRNA, sgRNA_alignment_tolerance, sgRNA_alignment_start_offset, detail, chromosome_size, flank_size):
 		self.chromosome = chromosome
 		self.strand = strand
 		self.ref_position = ref_position
@@ -179,6 +185,8 @@ class CutSite:
 
 		self.sgRNA = sgRNA
 		self.sgRNA_alignment_tolerance = sgRNA_alignment_tolerance
+		self.sgRNA_alignment_start_offset = sgRNA_alignment_start_offset
+
 		self.detail = detail
 		self.chromosome_size = chromosome_size
 		self.flank_size = flank_size
@@ -193,6 +201,7 @@ class CutSite:
 	def find_best_sgRNA_alignment(self):
 		"""
 		Loop through different alignment parameters starting with the preferred alignment method.
+		Start Stop are in reference to the sgRNA alignment 5'->3' on the plus strand 
 		"""
 		sequence = DNA(self.cut_region['sequence'])
 
@@ -203,15 +212,18 @@ class CutSite:
 
 			self.alignment['local_start'], self.alignment['local_stop'] = parse_global_alignment(self.alignment['alignment'])
 
+			self.alignment['local_stop'] = self.alignment['local_stop'] - self.sgRNA_alignment_start_offset[self.alignment['sgRNA']]
+
 			self.alignment['aligned_sequence'] = self.cut_region['sequence'][self.alignment['local_start'] : self.alignment['local_stop'] + 1]
 
 			self.alignment['aligned_gRNA'] = str(self.alignment['alignment'][0][0])[self.alignment['local_start'] : self.alignment['local_stop'] + 1]
 
 			self.alignment['alignment_length'] = len(self.alignment['aligned_sequence'])
 
+			self.alignment['PAM'] = self.cut_region['sequence'][self.alignment['local_stop'] + 1 : self.alignment['local_stop'] + 3]
+
 			if self.alignment['alignment_length'] in self.sgRNA_alignment_tolerance[seqname]:
 				break
-
 
 	def print_alignment_stats(self):
 		for k,v in self.alignment.items():
