@@ -10,7 +10,8 @@ from CRISPRito.Utils import (
 	genome_to_dict_memoryview,
 	zscore,
 	scale_min_max,
-	parse_global_alignment
+	parse_global_alignment,
+	sequence_slice_locations
 	)
 
 
@@ -25,7 +26,7 @@ class StandardCuts:
 		}
 		self.sgRNA_alignment_tolerance = {
 			'fwd' : range(18,21),
-			'fwd_NGG' : range(19,24)
+			'fwd_NGG' : range(20,25)
 		}
 		
 
@@ -142,6 +143,7 @@ class StandardCuts:
 				sgRNA = self.sgRNA,
 				sgRNA_alignment_tolerance = self.sgRNA_alignment_tolerance,
 				chromosome_size = self.genome_size[row.chromosome],
+				flank_size = self.flank_size,
 				detail = df_cluster_subset
 				)
 
@@ -158,49 +160,76 @@ class StandardCuts:
 
 class CutSite:
 
-	def __init__(self, chromosome, strand, ref_position, cut_region, sgRNA, sgRNA_alignment_tolerance, detail, chromosome_size):
+	def __init__(self, chromosome, strand, ref_position, cut_region, sgRNA, sgRNA_alignment_tolerance, detail, chromosome_size, flank_size):
 		self.chromosome = chromosome
 		self.strand = strand
 		self.ref_position = ref_position
-		self.cut_region = cut_region
+		start, end = sequence_slice_locations(pos = ref_position, flank_size = flank_size)
+		
+		self.cut_region = {
+			'start': start,
+			'stop': end
+			}
+		
+		if self.strand == '-':
+			self.cut_region['sequence'] = str(Seq(cut_region).reverse_complement())
+		
+		else:
+			self.cut_region['sequence'] = cut_region
+
 		self.sgRNA = sgRNA
 		self.sgRNA_alignment_tolerance = sgRNA_alignment_tolerance
 		self.detail = detail
 		self.chromosome_size = chromosome_size
+		self.flank_size = flank_size
 		self.alignment = {}
 
 	def __len__(self):
 		return len(self.detail) 
 
 	def __repr__(self):
-		return f"CutSite(chrom={self.chromosome}, strand={self.strand}, ref_pos={self.ref_position}, cuts={len(self)})"
+		return f"CutSite(chrom={self.chromosome}, strand={self.strand}, ref_pos={self.ref_position}, diversity={len(self)})"
 
 	def find_best_sgRNA_alignment(self):
-
-		if self.strand == '-':
-			sequence = DNA(str(Seq(self.cut_region).reverse_complement()))
-		else:
-			sequence = DNA(self.cut_region)
+		"""
+		Loop through different alignment parameters starting with the preferred alignment method.
+		"""
+		sequence = DNA(self.cut_region['sequence'])
 
 		for seqname, query_seq in self.sgRNA.items():
 			self.alignment['sgRNA'] = seqname
 
 			self.alignment['alignment'] = global_pairwise_align_nucleotide(query_seq, sequence)
 
-			self.alignment['alignment_start'], self.alignment['alignment_stop'] = parse_global_alignment(self.alignment['alignment'])
+			self.alignment['local_start'], self.alignment['local_stop'] = parse_global_alignment(self.alignment['alignment'])
 
-			self.alignment['alignment_length'] = self.alignment['alignment_stop'] - self.alignment['alignment_start']
+			self.alignment['aligned_sequence'] = self.cut_region['sequence'][self.alignment['local_start'] : self.alignment['local_stop'] + 1]
 
-			if self.alignment['alignment_length'] in self.sgRNA_alignment_tolerance:
+			self.alignment['aligned_gRNA'] = str(self.alignment['alignment'][0][0])[self.alignment['local_start'] : self.alignment['local_stop'] + 1]
+
+			self.alignment['alignment_length'] = len(self.alignment['aligned_sequence'])
+
+			if self.alignment['alignment_length'] in self.sgRNA_alignment_tolerance[seqname]:
 				break
+
 
 	def print_alignment_stats(self):
 		for k,v in self.alignment.items():
 			print(f'{k}: {v}')
 
+	def calculate_global_positions(self):
+		if self.strand == '-':
+			self.protospacer = {
+				'stop': self.cut_region['stop'] - self.alignment['local_start'],
+				'start': self.cut_region['stop'] - self.alignment['local_stop']
+				}
+		else:
+			self.protospacer = {
+				'stop': self.cut_region['start'] + self.alignment['local_start'],
+				'start': self.cut_region['start'] + self.alignment['local_stop']
+				}
 
-	def calculate():
-		pass
+
 
 	# def 
 

@@ -154,13 +154,17 @@ def skip_test_extract_cut_region_group2(load_2_group_samplesheet_ptprc, path_to_
 	assert len(standard_group.df_reference_cut_sites) == 5
 
 
-def test_get_genome_size():
+def test_get_genome_size(load_1_group_samplesheet_ptprc, sample_fasta_gz):
 	"""
-	pytest -sv tests/unit/test_StandardCuts.py::test_extract_cut_region_group2
+	pytest -sv tests/unit/test_StandardCuts.py::test_get_genome_size
 	"""
 
+	standard_group = StandardCuts(sample_sheet = load_1_group_samplesheet_ptprc, sgRNA = 'AAAATATGCAAACATCACTG')	
+	standard_group.load_genome(sample_fasta_gz)
+	standard_group.get_genome_size()
+	assert standard_group.genome_size == {'chr1': 64, 'chr2': 64}
 
-def test_build_cut_sites(load_1_group_samplesheet_ptprc, project_test_data_directory):
+def test_build_cut_sites(load_1_group_samplesheet_ptprc, project_test_data_directory, example_hg38_genome_size):
 	"""
 	pytest -sv tests/unit/test_StandardCuts.py::test_build_cut_sites
 	"""
@@ -181,6 +185,11 @@ def test_build_cut_sites(load_1_group_samplesheet_ptprc, project_test_data_direc
 	with patch.object(standard_group, 'extract_cut_region', return_value = pd.read_csv(pjoin(project_test_data_directory, 'cluster_sites', '1_group_cluster_regions_ptprc.csv'))):
 		standard_group.df_reference_cut_sites = standard_group.extract_cut_region()	
 
+	with patch.object(standard_group, 'get_genome_size', return_value = example_hg38_genome_size):
+		standard_group.genome_size = standard_group.get_genome_size()	
+
+	print(standard_group.genome_size)
+
 	# print(standard_group.df_reference_cut_sites)
 
 	# print(standard_group.df_cut_sites)
@@ -193,7 +202,7 @@ def test_build_cut_sites(load_1_group_samplesheet_ptprc, project_test_data_direc
 	assert len(standard_group.cut_sites) == 15
 
 @pytest.fixture
-def standard_group_1_ptprc_cut_sites(load_1_group_samplesheet_ptprc, project_test_data_directory):
+def standard_group_1_ptprc_cut_sites(load_1_group_samplesheet_ptprc, project_test_data_directory, example_hg38_genome_size):
 
 	standard_group = StandardCuts(sample_sheet = load_1_group_samplesheet_ptprc, sgRNA = 'AAAATATGCAAACATCACTG')	
 
@@ -210,6 +219,9 @@ def standard_group_1_ptprc_cut_sites(load_1_group_samplesheet_ptprc, project_tes
 	# standard_group.extract_cut_region()
 	with patch.object(standard_group, 'extract_cut_region', return_value = pd.read_csv(pjoin(project_test_data_directory, 'cluster_sites', '1_group_cluster_regions_ptprc.csv'))):
 		standard_group.df_reference_cut_sites = standard_group.extract_cut_region()	
+
+	with patch.object(standard_group, 'get_genome_size', return_value = example_hg38_genome_size):
+		standard_group.genome_size = standard_group.get_genome_size()	
 
 	standard_group.build_cut_sites()
 
@@ -228,6 +240,11 @@ def test_cut_site_alignment(standard_group_1_ptprc_cut_sites):
 		print(standard_cut)
 
 		standard_cut.find_best_sgRNA_alignment()
+
+		standard_cut.print_alignment_stats()
+		break
+
+
 
 
 

@@ -64,10 +64,15 @@ def genome_to_dict_memoryview(genome_path):
 			record_dict[k] = memoryview(str(v.seq).encode())
 		return record_dict
 
+
+def sequence_slice_locations(pos, flank_size):
+	start, end = max(0, pos - flank_size), pos + flank_size
+	return start, end
+
 def retrieve_genome_slices_memoryview(sequence, positions, flank_size):
 	slices = {}
 	for pos in positions:
-		start, end = max(0, pos - flank_size), pos + flank_size
+		start, end = sequence_slice_locations(pos, flank_size)
 		slices[pos] = sequence[start:end].tobytes().decode()
 	return slices
 
@@ -80,6 +85,7 @@ def parse_global_alignment(aln):
 
 	alignment = np.where(~np.isnan(sequence_alignment))[0]
 
+	# this allows for counting even if gaps exist
 	record = [e for e, i in enumerate(sequence_alignment) if not np.isnan(i)]
 
 	if len(record) != 0:
