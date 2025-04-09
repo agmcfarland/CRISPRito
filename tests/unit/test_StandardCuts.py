@@ -285,11 +285,11 @@ def test_calculate_global_positions(standard_group_1_ptprc_cut_sites):
 		standard_cut.calculate_global_positions()
 
 		if standard_cut.strand == '-':
-			assert standard_cut.protospacer['stop'] > standard_cut.protospacer['start']
+			assert standard_cut.global_position['protospacer_stop'] > standard_cut.global_position['protospacer_start']
 		else:
-			assert standard_cut.protospacer['start'] > standard_cut.protospacer['stop']
+			assert standard_cut.global_position['protospacer_start'] > standard_cut.global_position['protospacer_stop']
 		
-		print(standard_cut.protospacer)
+		print(standard_cut.global_position)
 
 
 

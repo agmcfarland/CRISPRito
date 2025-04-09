@@ -150,6 +150,7 @@ class StandardCuts:
 				sgRNA_alignment_tolerance = self.sgRNA_alignment_tolerance,
 				sgRNA_alignment_start_offset = self.sgRNA_alignment_start_offset,
 				flank_size = self.flank_size,
+				cut_distance = self.cut_distance,
 				detail = df_cluster_subset
 				)
 
@@ -224,7 +225,7 @@ class CutSite:
 
 			self.alignment['PAM'] = self.cut_region['sequence'][self.alignment['local_stop'] + 1 : self.alignment['local_stop'] + 1 + 3]
 
-			self.alignmen['local_cut'] = self.alignment['local_stop'] - self.cut_distance
+			self.alignment['local_cut'] = self.alignment['local_stop'] - self.cut_distance
 
 			if self.alignment['alignment_length'] in self.sgRNA_alignment_tolerance[seqname]:
 				break
@@ -239,13 +240,13 @@ class CutSite:
 				'protospacer_stop': self.cut_region['stop'] - self.alignment['local_start'],
 				'protospacer_start': self.cut_region['stop'] - self.alignment['local_stop']
 				}
-			self.global_position['cut'] = self.global_position['start'] + self.cut_distance	
+			self.global_position['cut'] = self.global_position['protospacer_start'] + self.cut_distance	
 		else:
-			self.protospacer = {
+			self.global_position = {
 				'protospacer_stop': self.cut_region['start'] + self.alignment['local_start'],
 				'protospacer_start': self.cut_region['start'] + self.alignment['local_stop']
 				}
-			self.global_position['cut'] = self.global_position['start'] - self.cut_distance	
+			self.global_position['cut'] = self.global_position['protospacer_start'] - self.cut_distance	
 
 
 
