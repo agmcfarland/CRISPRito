@@ -1,5 +1,6 @@
 from unittest.mock import patch
 import pytest
+import time
 import pandas as pd
 from os.path import join as pjoin
 from CRISPRito.StandardCuts import StandardCuts
@@ -266,6 +267,60 @@ def test_cut_site_alignment(standard_group_1_ptprc_cut_sites):
 		# break
 
 
+def check_cut_sites_for_pam(standard_group, expected):
+
+	for e, standard_cut in enumerate(standard_group.cut_sites):
+
+		assert standard_cut.alignment['PAM'] == expected[str(standard_cut)]
+
+
+def test_multiprocessing_cut_site_alignment(standard_group_1_ptprc_cut_sites):
+	"""
+	pytest -sv tests/unit/test_StandardCuts.py::test_multiprocessing_cut_site_alignment
+	Using PAM sequence to identify correct since this relies on local_start and local_stop being correct
+	"""
+
+	expected = {
+	'CutSite(chrom=chr1, strand=+, ref_pos=183741771, cut=183741786 diversity=1)': 'AGG',
+	'CutSite(chrom=chr1, strand=+, ref_pos=198706743, cut=198706753 diversity=3)': 'TGG',
+	'CutSite(chrom=chr14, strand=+, ref_pos=40300864, cut=40300879 diversity=1)': 'TGG',
+	'CutSite(chrom=chr18, strand=+, ref_pos=57630524, cut=57630539 diversity=1)': 'CGG',
+	'CutSite(chrom=chr18, strand=-, ref_pos=41108133, cut=41108140 diversity=1)': 'TGG',
+	'CutSite(chrom=chr2, strand=-, ref_pos=143961591, cut=143961596 diversity=3)': 'AGG',
+	'CutSite(chrom=chr2, strand=-, ref_pos=184581387, cut=184581394 diversity=1)': 'TGG',
+	'CutSite(chrom=chr3, strand=+, ref_pos=65866797, cut=65866814 diversity=1)': 'GTG',
+	'CutSite(chrom=chr3, strand=+, ref_pos=138494328, cut=138494327 diversity=1)': 'AGG',
+	'CutSite(chrom=chr6, strand=-, ref_pos=100224884, cut=100224884 diversity=1)': 'AGT',
+	'CutSite(chrom=chr6, strand=-, ref_pos=134850663, cut=134850668 diversity=1)': 'AGC',
+	'CutSite(chrom=chr7, strand=-, ref_pos=28169223, cut=28169229 diversity=1)': 'AGA',
+	'CutSite(chrom=chr7, strand=-, ref_pos=115239484, cut=115239490 diversity=1)': 'AGG',
+	'CutSite(chrom=chr8, strand=+, ref_pos=6301238, cut=6301255 diversity=1)': 'GGG',
+	'CutSite(chrom=chr8, strand=+, ref_pos=28930554, cut=28930553 diversity=1)': 'TGG'}
+
+	print('\n')
+	print('Multithreaded')
+	standard_group = standard_group_1_ptprc_cut_sites
+	start = time.time()
+	standard_group.multithread_sgRNA_alignment()
+	print(time.time()-start)
+	check_cut_sites_for_pam(standard_group, expected)
+
+	print('Multiprocessor')
+	standard_group = standard_group_1_ptprc_cut_sites
+	start = time.time()
+	standard_group.parallel_sgRNA_alignment()
+	print(time.time()-start)
+	check_cut_sites_for_pam(standard_group, expected)
+
+	print('Single threaded')
+	standard_group = standard_group_1_ptprc_cut_sites
+	start = time.time()
+	standard_group.single_sgRNA_alignment()
+	print(time.time()-start)
+	check_cut_sites_for_pam(standard_group, expected)
+
+
+
 def test_calculate_global_positions(standard_group_1_ptprc_cut_sites):
 	"""
 	pytest -sv tests/unit/test_StandardCuts.py::test_calculate_global_positions
@@ -305,40 +360,141 @@ def test_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg3
 	# print(df_genomic_positions)
 	# print(df_genomic_positions.columns)
 
-	print('\n')
-	for e, standard_cut in enumerate(standard_group.cut_sites):
+
+	expected_results = {
+	'CutSite(chrom=chr1, strand=+, ref_pos=183741771, cut=183741786 diversity=1)': {'genomic_full': 4,
+	'genomic_summary':2,
+	'nearest_gene':'RGL1',
+	'nearest_gene_distance':0.0},
+
+
+	'CutSite(chrom=chr1, strand=+, ref_pos=198706743, cut=198706753 diversity=3)': {'genomic_full': 2,
+	'genomic_summary':1,
+	'nearest_gene':'PTPRC',
+	'nearest_gene_distance':0.0},
+
+
+	'CutSite(chrom=chr14, strand=+, ref_pos=40300864, cut=40300879 diversity=1)': {'genomic_full': 0,
+	'genomic_summary':0,
+	'nearest_gene':'FBXO33',
+	'nearest_gene_distance':868446.0},
+
+
+	'CutSite(chrom=chr18, strand=+, ref_pos=57630524, cut=57630539 diversity=1)': {'genomic_full': 0,
+	'genomic_summary':0,
+	'nearest_gene':'NARS1',
+	'nearest_gene_distance':8703.0},
+
+
+	'CutSite(chrom=chr18, strand=-, ref_pos=41108133, cut=41108140 diversity=1)': {'genomic_full': 0,
+	'genomic_summary':0,
+	'nearest_gene':'PIK3C3',
+	'nearest_gene_distance':847093.0},
+
+
+	'CutSite(chrom=chr2, strand=-, ref_pos=143961591, cut=143961596 diversity=3)': {'genomic_full': 27,
+	'genomic_summary':1,
+	'nearest_gene':'GTDC1',
+	'nearest_gene_distance':0.0},
+
+
+	'CutSite(chrom=chr2, strand=-, ref_pos=184581387, cut=184581394 diversity=1)': {'genomic_full': 0,
+	'genomic_summary':0,
+	'nearest_gene':'ZNF804A',
+	'nearest_gene_distance':17134.0},
+
+
+	'CutSite(chrom=chr3, strand=+, ref_pos=65866797, cut=65866814 diversity=1)': {'genomic_full': 3,
+	'genomic_summary':1,
+	'nearest_gene':'MAGI1',
+	'nearest_gene_distance':0.0},
+
+
+	'CutSite(chrom=chr3, strand=+, ref_pos=138494328, cut=138494327 diversity=1)': {'genomic_full': 0,
+	'genomic_summary':0,
+	'nearest_gene':'CEP70',
+	'nearest_gene_distance':16.0},
+
+
+	'CutSite(chrom=chr6, strand=-, ref_pos=100224884, cut=100224884 diversity=1)': {'genomic_full': 0,
+	'genomic_summary':0,
+	'nearest_gene':'SIM1',
+	'nearest_gene_distance':160124.0},
+
+
+	'CutSite(chrom=chr6, strand=-, ref_pos=134850663, cut=134850668 diversity=1)': {'genomic_full': 0,
+	'genomic_summary':0,
+	'nearest_gene':'ALDH8A1',
+	'nearest_gene_distance':66724.0},
+
+
+	'CutSite(chrom=chr7, strand=-, ref_pos=28169223, cut=28169229 diversity=1)': {'genomic_full': 1,
+	'genomic_summary':1,
+	'nearest_gene':'JAZF1',
+	'nearest_gene_distance':0.0},
+
+
+	'CutSite(chrom=chr7, strand=-, ref_pos=115239484, cut=115239490 diversity=1)': {'genomic_full': 0,
+	'genomic_summary':0,
+	'nearest_gene':'MDFIC',
+	'nearest_gene_distance':219573.0},
+
+
+	'CutSite(chrom=chr8, strand=+, ref_pos=6301238, cut=6301255 diversity=1)': {'genomic_full': 0,
+	'genomic_summary':0,
+	'nearest_gene':'MCPH1',
+	'nearest_gene_distance':105371.0},
+
+
+	'CutSite(chrom=chr8, strand=+, ref_pos=28930554, cut=28930553 diversity=1)': {'genomic_full': 16,
+	'genomic_summary':2,
+	'nearest_gene':'HMBOX1',
+	'nearest_gene_distance':0.0}
+	}
+
+	def check_cut_site_correct(standard_group, expected_results):
 		
-		print('\n')
+		for standard_cut in standard_group.cut_sites:
 
-		standard_cut.find_best_sgRNA_alignment()
+			for k, v in standard_cut.features.items():
+				if type(v) == pd.DataFrame:
+					assert len(v) == expected_results[str(standard_cut)][k]
+				else:
+					assert v == expected_results[str(standard_cut)][k]
 
-		standard_cut.calculate_global_positions()
-
-		standard_cut.identify_genomic_features(df = df_genomic_positions)
-
-
-		print(standard_cut)
-
-		print(standard_cut.detail)
-
-		print(standard_cut.cut_region)
-
-		standard_cut.print_alignment_stats()
-
-		print(standard_cut.features['genomic_full'])
-
-		print(standard_cut.features['genomic_summary'])
-
-		print(standard_cut.global_position)
-		# break
+				assert standard_cut.alignment['PAM'] == expected[str(standard_cut)]
 
 
+	print('\n')
+	print('Multithreaded')
+	standard_group = standard_group_1_ptprc_cut_sites
+	start = time.time()
+	standard_group.multithread_sgRNA_alignment()
+	print(time.time()-start)
+	check_cut_site_correct(standard_group, expected_results)
+
+	print('Multiprocessor')
+	standard_group = standard_group_1_ptprc_cut_sites
+	start = time.time()
+	standard_group.parallel_sgRNA_alignment()
+	print(time.time()-start)
+	check_cut_site_correct(standard_group, expected_results)
+
+	print('Single threaded')
+	standard_group = standard_group_1_ptprc_cut_sites
+	start = time.time()
+	standard_group.single_sgRNA_alignment()
+	print(time.time()-start)
+	check_cut_site_correct(standard_group, expected_results)
 
 
+def test_multiprocessing_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
+	"""
+	pytest -sv tests/unit/test_StandardCuts.py::test_extract_in_refseq_feature
+	"""
 
 
-
-
+	pass
 
 
 

@@ -139,7 +139,7 @@ def get_closest_annotation(df, chromosome, position, column_name):
 
 	df = df[df["distance"] == df["distance"].min()]
 	
-	return list(df[column_name].unique())[0]
+	return list(df[column_name].unique())[0], df['distance'].tolist()[0]
 
 
 

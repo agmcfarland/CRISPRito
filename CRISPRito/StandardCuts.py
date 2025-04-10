@@ -4,6 +4,9 @@ from os.path import join as pjoin
 from Bio.Seq import Seq
 from skbio import DNA
 from skbio.alignment import global_pairwise_align_nucleotide
+from concurrent.futures import ProcessPoolExecutor, as_completed, ThreadPoolExecutor
+import multiprocessing
+from tqdm import tqdm
 from CRISPRito.Utils import (
 	greedy_clustering_incremental,
 	retrieve_genome_slices_memoryview,
@@ -12,7 +15,8 @@ from CRISPRito.Utils import (
 	scale_min_max,
 	parse_global_alignment,
 	sequence_slice_locations,
-	extract_annotations
+	extract_annotations,
+	get_closest_annotation
 	)
 
 
@@ -158,13 +162,43 @@ class StandardCuts:
 			self.cut_sites.append(standard_cut)
 
 
+	def multithread_sgRNA_alignment(self, max_workers = None):
+		if max_workers is None:
+			max_workers = multiprocessing.cpu_count()
+
+		with ThreadPoolExecutor(max_workers= max_workers) as executor:
+			# self.cut_sites = list(tqdm(executor.map(align_cut_site_worker, self.cut_sites), total=len(self.cut_sites)))
+			self.cut_sites = list(executor.map(align_cut_site_worker, self.cut_sites))
+
+	def parallel_sgRNA_alignment(self, max_workers=None):
+		"""
+		Parallelize sgRNA alignment across all CutSite objects
+		"""
+		if max_workers is None:
+			max_workers = multiprocessing.cpu_count()
+
+		with ProcessPoolExecutor(max_workers=max_workers) as executor:
+			futures = {executor.submit(align_cut_site_worker, cut_site): cut_site for cut_site in self.cut_sites}
+
+			results = []
+			for future in as_completed(futures):
+				try:
+					result = future.result()
+					results.append(result)
+				except Exception as e:
+					print(f"Error during alignment: {e}")
+
+		self.cut_sites = results
+
+	def single_sgRNA_alignment(self):
+		self.cut_sites = [align_cut_site_worker(i) for i in self.cut_sites]
 
 
-	# def extract_cut_region():
-		# pass
-
-		
-
+def align_cut_site_worker(cut_site):
+	cut_site.find_best_sgRNA_alignment()
+	cut_site.calculate_global_positions()
+	# cut_site.identify_genomic_features(df = df)
+	return cut_site
 
 class CutSite:
 
@@ -172,12 +206,8 @@ class CutSite:
 		self.chromosome = chromosome
 		self.strand = strand
 		self.ref_position = ref_position
-		start, end = sequence_slice_locations(pos = ref_position, flank_size = flank_size)
-		
-		self.cut_region = {
-			'start': start,
-			'stop': end
-			}
+		self.cut_region = {}
+		self.cut_region['start'], self.cut_region['stop'] = sequence_slice_locations(pos = ref_position, flank_size = flank_size)
 		
 		if self.strand == '-':
 			self.cut_region['sequence'] = str(Seq(cut_region).reverse_complement())
@@ -255,12 +285,11 @@ class CutSite:
 			self.global_position['cut'] = self.global_position['protospacer_start'] - self.cut_distance	
 
 	def identify_genomic_features(self, df):
-		self.features['genomic_full'] = extract_annotations(df, chromosome = self.chromosome, position = self.global_position['cut'])
+		self.features['genomic_full'] = extract_annotations(df = df, chromosome = self.chromosome, position = self.global_position['cut'])
 
 		self.features['genomic_summary'] = self.features['genomic_full'].drop_duplicates(subset=["name2", "feature"])
 
-
-
+		self.features['nearest_gene'], self.features['nearest_gene_distance'] = get_closest_annotation(df = df, chromosome = self.chromosome, position = self.global_position['cut'], column_name = 'name2')
 
 
 
