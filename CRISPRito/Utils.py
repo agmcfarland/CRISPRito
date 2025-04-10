@@ -95,15 +95,15 @@ def parse_global_alignment(aln):
 
 
 def numpy_list_converter(func):
-    """
-    Decorator to ensure list is converted to numpy array and returned as a flattened list
-    """
-    def wrapper(score, *args, **kwargs):
-        if isinstance(score, list):
-            score = np.array(score)
-        result = func(score, *args, **kwargs)
-        return result.flatten().tolist()
-    return wrapper
+	"""
+	Decorator to ensure list is converted to numpy array and returned as a flattened list
+	"""
+	def wrapper(score, *args, **kwargs):
+		if isinstance(score, list):
+			score = np.array(score)
+		result = func(score, *args, **kwargs)
+		return result.flatten().tolist()
+	return wrapper
 
 @numpy_list_converter
 def scale_min_max(score:list):
@@ -120,6 +120,27 @@ def scale_zscore(score:list, degrees_of_freedom = 0):
 	scaled_score = zscore(score, ddof = degrees_of_freedom)
 
 	return scaled_score
+
+
+def extract_annotations(df, chromosome, position):
+	return df[(df['chrom'] == chromosome) & (df['start'] <= position) & (df['end'] >= position)]
+
+
+
+def get_closest_annotation(df, chromosome, position, column_name):
+
+	df = df[df['chrom'] == chromosome].copy()
+
+	df["distance"] = np.where(
+		(df["start"] <= position) & (df["end"] >= position),
+		0,
+		np.minimum(np.abs(df["start"] - position), np.abs(df["end"] - position))
+	)
+
+	df = df[df["distance"] == df["distance"].min()]
+	
+	return list(df[column_name].unique())[0]
+
 
 
 

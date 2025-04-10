@@ -292,6 +292,46 @@ def test_calculate_global_positions(standard_group_1_ptprc_cut_sites):
 		print(standard_cut.global_position)
 
 
+def test_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
+	"""
+	pytest -sv tests/unit/test_StandardCuts.py::test_extract_in_refseq_feature
+	"""
+	
+	standard_group = standard_group_1_ptprc_cut_sites
+
+	df_genomic_positions = pd.read_csv(path_to_hg38_refseq)
+
+	# print('\n')
+	# print(df_genomic_positions)
+	# print(df_genomic_positions.columns)
+
+	print('\n')
+	for e, standard_cut in enumerate(standard_group.cut_sites):
+		
+		print('\n')
+
+		standard_cut.find_best_sgRNA_alignment()
+
+		standard_cut.calculate_global_positions()
+
+		standard_cut.identify_genomic_features(df = df_genomic_positions)
+
+
+		print(standard_cut)
+
+		print(standard_cut.detail)
+
+		print(standard_cut.cut_region)
+
+		standard_cut.print_alignment_stats()
+
+		print(standard_cut.features['genomic_full'])
+
+		print(standard_cut.features['genomic_summary'])
+
+		print(standard_cut.global_position)
+		# break
+
 
 
 

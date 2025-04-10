@@ -26,6 +26,17 @@ def path_to_hg38_genome(scope = 'session', autouse = True):
 	"""
 	return '/data/GenomicTrackRepository/data/processed/hg38/hg38.fasta.gz'
 
+@pytest.fixture
+def path_to_hg38_refseq(scope = 'session', autouse = True):
+	"""
+	"""
+	return '/data/GenomicTrackRepository/data/processed/hg38/ncbiRefSeqCurated_expanded.csv'
+
+@pytest.fixture
+def path_to_hg38_encode(scope = 'session', autouse = True):
+	"""
+	"""
+	return '/data/GenomicTrackRepository/data/processed/hg38/encode_ccre_all.csv'
 
 @pytest.fixture
 def sample_fasta_gz(scope = 'session', autouse = True):

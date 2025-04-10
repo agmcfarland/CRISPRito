@@ -8,10 +8,11 @@ from CRISPRito.Utils import (
 	greedy_clustering_incremental,
 	retrieve_genome_slices_memoryview,
 	genome_to_dict_memoryview,
-	zscore,
+	scale_zscore,
 	scale_min_max,
 	parse_global_alignment,
-	sequence_slice_locations
+	sequence_slice_locations,
+	extract_annotations
 	)
 
 
@@ -86,7 +87,7 @@ class StandardCuts:
 
 	def standardize_scores(self):
 
-		self.df_cut_sites['zscore'] = self.df_cut_sites.groupby('id')['score'].transform(lambda x: zscore(x.tolist(), ddof = 0))
+		self.df_cut_sites['zscore'] = self.df_cut_sites.groupby('id')['score'].transform(lambda x: scale_zscore(x.tolist(), degrees_of_freedom = 0))
 
 		self.df_cut_sites['min_max'] = self.df_cut_sites.groupby('id')['score'].transform(lambda x: scale_min_max(x.tolist()))
 
@@ -193,13 +194,18 @@ class CutSite:
 		self.detail = detail
 
 		self.flank_size = flank_size
+
 		self.alignment = {}
+		self.features = {}
+		self.global_position = {
+			'cut': None
+		}
 
 	def __len__(self):
 		return len(self.detail) 
 
 	def __repr__(self):
-		return f"CutSite(chrom={self.chromosome}, strand={self.strand}, ref_pos={self.ref_position}, diversity={len(self)})"
+		return f"CutSite(chrom={self.chromosome}, strand={self.strand}, ref_pos={self.ref_position}, cut={self.global_position['cut']} diversity={len(self)})"
 
 	def find_best_sgRNA_alignment(self):
 		"""
@@ -248,9 +254,10 @@ class CutSite:
 				}
 			self.global_position['cut'] = self.global_position['protospacer_start'] - self.cut_distance	
 
+	def identify_genomic_features(self, df):
+		self.features['genomic_full'] = extract_annotations(df, chromosome = self.chromosome, position = self.global_position['cut'])
 
-
-	# def 
+		self.features['genomic_summary'] = self.features['genomic_full'].drop_duplicates(subset=["name2", "feature"])
 
 
 
