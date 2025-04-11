@@ -301,21 +301,21 @@ def test_multiprocessing_cut_site_alignment(standard_group_1_ptprc_cut_sites):
 	print('Multithreaded')
 	standard_group = standard_group_1_ptprc_cut_sites
 	start = time.time()
-	standard_group.multithread_sgRNA_alignment()
+	standard_group.multithread_build_cut_site_profile()
 	print(time.time()-start)
 	check_cut_sites_for_pam(standard_group, expected)
 
 	print('Multiprocessor')
 	standard_group = standard_group_1_ptprc_cut_sites
 	start = time.time()
-	standard_group.parallel_sgRNA_alignment()
+	standard_group.parallel_sgRbuild_cut_site_profile()
 	print(time.time()-start)
 	check_cut_sites_for_pam(standard_group, expected)
 
 	print('Single threaded')
 	standard_group = standard_group_1_ptprc_cut_sites
 	start = time.time()
-	standard_group.single_sgRNA_alignment()
+	standard_group.single_sgRNAbuild_cut_site_profile()
 	print(time.time()-start)
 	check_cut_sites_for_pam(standard_group, expected)
 
@@ -464,21 +464,21 @@ def test_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg3
 	print('Multithreaded')
 	standard_group = standard_group_1_ptprc_cut_sites
 	start = time.time()
-	standard_group.multithread_sgRNA_alignment()
+	standard_group.multithread_build_cut_site_profile()
 	print(time.time()-start)
 	check_cut_site_correct(standard_group, expected_results)
 
 	print('Multiprocessor')
 	standard_group = standard_group_1_ptprc_cut_sites
 	start = time.time()
-	standard_group.parallel_sgRNA_alignment()
+	standard_group.parallel_build_cut_site_profile()
 	print(time.time()-start)
 	check_cut_site_correct(standard_group, expected_results)
 
 	print('Single threaded')
 	standard_group = standard_group_1_ptprc_cut_sites
 	start = time.time()
-	standard_group.single_sgRNA_alignment()
+	standard_group.single_build_cut_site_profile()
 	print(time.time()-start)
 	check_cut_site_correct(standard_group, expected_results)
 

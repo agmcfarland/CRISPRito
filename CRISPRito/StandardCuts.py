@@ -162,7 +162,7 @@ class StandardCuts:
 			self.cut_sites.append(standard_cut)
 
 
-	def multithread_sgRNA_alignment(self, max_workers = None):
+	def multithread_build_cut_site_profile(self, max_workers = None):
 		if max_workers is None:
 			max_workers = multiprocessing.cpu_count()
 
@@ -170,7 +170,7 @@ class StandardCuts:
 			# self.cut_sites = list(tqdm(executor.map(align_cut_site_worker, self.cut_sites), total=len(self.cut_sites)))
 			self.cut_sites = list(executor.map(align_cut_site_worker, self.cut_sites))
 
-	def parallel_sgRNA_alignment(self, max_workers=None):
+	def parallel_build_cut_site_profile(self, max_workers=None):
 		"""
 		Parallelize sgRNA alignment across all CutSite objects
 		"""
@@ -190,14 +190,14 @@ class StandardCuts:
 
 		self.cut_sites = results
 
-	def single_sgRNA_alignment(self):
+	def single_build_cut_site_profile(self):
 		self.cut_sites = [align_cut_site_worker(i) for i in self.cut_sites]
 
 
-def align_cut_site_worker(cut_site):
+def build_cut_site_profile_worker(cut_site, df):
 	cut_site.find_best_sgRNA_alignment()
 	cut_site.calculate_global_positions()
-	# cut_site.identify_genomic_features(df = df)
+	cut_site.identify_genomic_features(df = df)
 	return cut_site
 
 class CutSite:
