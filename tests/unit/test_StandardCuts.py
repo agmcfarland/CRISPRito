@@ -298,24 +298,24 @@ def test_multiprocessing_cut_site_alignment(standard_group_1_ptprc_cut_sites):
 	'CutSite(chrom=chr8, strand=+, ref_pos=28930554, cut=28930553 diversity=1)': 'TGG'}
 
 	print('\n')
-	print('Multithreaded')
-	standard_group = standard_group_1_ptprc_cut_sites
-	start = time.time()
-	standard_group.multithread_build_cut_site_profile()
-	print(time.time()-start)
-	check_cut_sites_for_pam(standard_group, expected)
+	# print('Multithreaded')
+	# standard_group = standard_group_1_ptprc_cut_sites
+	# start = time.time()
+	# standard_group.multithread_build_cut_site_profile()
+	# print(time.time()-start)
+	# check_cut_sites_for_pam(standard_group, expected)
 
 	print('Multiprocessor')
 	standard_group = standard_group_1_ptprc_cut_sites
 	start = time.time()
-	standard_group.parallel_sgRbuild_cut_site_profile()
+	standard_group.parallel_build_cut_site_alignment()
 	print(time.time()-start)
 	check_cut_sites_for_pam(standard_group, expected)
 
 	print('Single threaded')
 	standard_group = standard_group_1_ptprc_cut_sites
 	start = time.time()
-	standard_group.single_sgRNAbuild_cut_site_profile()
+	standard_group.single_build_cut_site_alignment()
 	print(time.time()-start)
 	check_cut_sites_for_pam(standard_group, expected)
 
@@ -347,14 +347,22 @@ def test_calculate_global_positions(standard_group_1_ptprc_cut_sites):
 		print(standard_cut.global_position)
 
 
+def check_cut_site_correct(standard_group, expected_results):
+	
+	for standard_cut in standard_group.cut_sites:
+
+		assert len(standard_cut.features) > 0
+
+		for k, v in standard_cut.features.items():
+			if type(v) == pd.DataFrame:
+				assert len(v) == expected_results[str(standard_cut)][k]
+			else:
+				assert v == expected_results[str(standard_cut)][k]
+
 def test_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
 	"""
 	pytest -sv tests/unit/test_StandardCuts.py::test_extract_in_refseq_feature
 	"""
-	
-	standard_group = standard_group_1_ptprc_cut_sites
-
-	df_genomic_positions = pd.read_csv(path_to_hg38_refseq)
 
 	expected_results = {
 	'CutSite(chrom=chr1, strand=+, ref_pos=183741771, cut=183741786 diversity=1)': {'genomic_full': 4,
@@ -447,49 +455,50 @@ def test_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg3
 	'nearest_gene_distance':0.0}
 	}
 
-	def check_cut_site_correct(standard_group, expected_results):
-		
-		for standard_cut in standard_group.cut_sites:
-
-			for k, v in standard_cut.features.items():
-				if type(v) == pd.DataFrame:
-					assert len(v) == expected_results[str(standard_cut)][k]
-				else:
-					assert v == expected_results[str(standard_cut)][k]
-
-				assert standard_cut.alignment['PAM'] == expected[str(standard_cut)]
-
-
-	print('\n')
-	print('Multithreaded')
-	standard_group = standard_group_1_ptprc_cut_sites
-	start = time.time()
-	standard_group.multithread_build_cut_site_profile()
-	print(time.time()-start)
-	check_cut_site_correct(standard_group, expected_results)
-
-	print('Multiprocessor')
-	standard_group = standard_group_1_ptprc_cut_sites
-	start = time.time()
-	standard_group.parallel_build_cut_site_profile()
-	print(time.time()-start)
-	check_cut_site_correct(standard_group, expected_results)
-
-	print('Single threaded')
-	standard_group = standard_group_1_ptprc_cut_sites
-	start = time.time()
-	standard_group.single_build_cut_site_profile()
-	print(time.time()-start)
-	check_cut_site_correct(standard_group, expected_results)
-
-
-def test_multiprocessing_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
 	"""
 	pytest -sv tests/unit/test_StandardCuts.py::test_extract_in_refseq_feature
 	"""
 
+	standard_group = standard_group_1_ptprc_cut_sites
 
-	pass
+	df_genomic_positions = pd.read_csv(path_to_hg38_refseq)
+
+	print('\n')
+
+	print('Multithreaded')
+	standard_group = standard_group_1_ptprc_cut_sites
+	standard_group.parallel_build_cut_site_alignment()
+	start = time.time()
+	standard_group.multithread_build_cut_site_annotation(df_genomic_features = df_genomic_positions)
+	print(time.time()-start)
+	check_cut_site_correct(standard_group, expected_results)
+
+
+# def test_multiprocessing_identify_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
+# 	"""
+# 	pytest -sv tests/unit/test_StandardCuts.py::test_multiprocessing_extract_in_refseq_feature
+# 	"""
+# 	df_genomic_positions = pd.read_csv(path_to_hg38_refseq)
+
+
+# 	standard_group = standard_group_1_ptprc_cut_sites
+
+# 	print('Multiprocessor')
+# 	standard_group = standard_group_1_ptprc_cut_sites
+# 	start = time.time()
+# 	standard_group.parallel_build_cut_site_profile(df_genomic_features = df_genomic_positions)
+# 	print(time.time()-start)
+# 	# check_cut_site_correct(standard_group, expected_results)
+
+# 	print('Single threaded')
+# 	standard_group = standard_group_1_ptprc_cut_sites
+# 	start = time.time()
+# 	standard_group.single_build_cut_site_profile(df_genomic_features = df_genomic_positions)
+# 	print(time.time()-start)
+# 	# check_cut_site_correct(standard_group, expected_results)
+
+# 	pass
+
 
 
 

@@ -1,3 +1,4 @@
+from itertools import repeat
 import pandas as pd
 import os
 from os.path import join as pjoin
@@ -16,7 +17,8 @@ from CRISPRito.Utils import (
 	parse_global_alignment,
 	sequence_slice_locations,
 	extract_annotations,
-	get_closest_annotation
+	get_closest_annotation,
+	slice_annotation
 	)
 
 
@@ -162,15 +164,20 @@ class StandardCuts:
 			self.cut_sites.append(standard_cut)
 
 
-	def multithread_build_cut_site_profile(self, max_workers = None):
+	def multithread_build_cut_site_annotation(self, df_genomic_features, max_workers = None):
 		if max_workers is None:
 			max_workers = multiprocessing.cpu_count()
 
 		with ThreadPoolExecutor(max_workers= max_workers) as executor:
-			# self.cut_sites = list(tqdm(executor.map(align_cut_site_worker, self.cut_sites), total=len(self.cut_sites)))
-			self.cut_sites = list(executor.map(align_cut_site_worker, self.cut_sites))
+			# self.cut_sites = list(tqdm(executor.map(build_cut_site_profile_worker, self.cut_sites), total=len(self.cut_sites)))
+			self.cut_sites = list(executor.map(
+				build_cut_site_annotation_worker,
+				self.cut_sites,
+				repeat(df_genomic_features)
+				)
+			)
 
-	def parallel_build_cut_site_profile(self, max_workers=None):
+	def parallel_build_cut_site_alignment(self, max_workers=None):
 		"""
 		Parallelize sgRNA alignment across all CutSite objects
 		"""
@@ -178,7 +185,7 @@ class StandardCuts:
 			max_workers = multiprocessing.cpu_count()
 
 		with ProcessPoolExecutor(max_workers=max_workers) as executor:
-			futures = {executor.submit(align_cut_site_worker, cut_site): cut_site for cut_site in self.cut_sites}
+			futures = {executor.submit(build_cut_site_alignment_worker, cut_site): cut_site for cut_site in self.cut_sites}
 
 			results = []
 			for future in as_completed(futures):
@@ -190,15 +197,20 @@ class StandardCuts:
 
 		self.cut_sites = results
 
-	def single_build_cut_site_profile(self):
-		self.cut_sites = [align_cut_site_worker(i) for i in self.cut_sites]
+	def single_build_cut_site_alignment(self):
+		self.cut_sites = [build_cut_site_alignment_worker(i) for i in self.cut_sites]
 
 
-def build_cut_site_profile_worker(cut_site, df):
+def build_cut_site_alignment_worker(cut_site):
 	cut_site.find_best_sgRNA_alignment()
 	cut_site.calculate_global_positions()
-	cut_site.identify_genomic_features(df = df)
 	return cut_site
+
+
+def build_cut_site_annotation_worker(cut_site, df_genomic_features):
+	cut_site.identify_genomic_features(df = df_genomic_features)
+	return cut_site
+
 
 class CutSite:
 
@@ -284,12 +296,30 @@ class CutSite:
 				}
 			self.global_position['cut'] = self.global_position['protospacer_start'] - self.cut_distance	
 
-	def identify_genomic_features(self, df):
-		self.features['genomic_full'] = extract_annotations(df = df, chromosome = self.chromosome, position = self.global_position['cut'])
+	def identify_genomic_features(self, df, tolerance = 3_000_000):
+
+		df = slice_annotation(df, chromosome = self.chromosome, position = self.global_position['cut'])
+
+		self.features['genomic_full'] = extract_annotations(df = df, position = self.global_position['cut'])
 
 		self.features['genomic_summary'] = self.features['genomic_full'].drop_duplicates(subset=["name2", "feature"])
 
-		self.features['nearest_gene'], self.features['nearest_gene_distance'] = get_closest_annotation(df = df, chromosome = self.chromosome, position = self.global_position['cut'], column_name = 'name2')
+		self.features['nearest_gene'], self.features['nearest_gene_distance'] = get_closest_annotation(df = df, position = self.global_position['cut'], column_name = 'name2')
+
+
+	def build_genomic_score_table(self):
+		pass
+
+
+	# def score_cut(self):
+	# 	"""
+	# 	"""
+	# 	{'intron': [1 if self.features['genomic_full']['feature']]
+	# 	}
+	# 	if 'intron':
+
+
+
 
 
 

@@ -122,14 +122,24 @@ def scale_zscore(score:list, degrees_of_freedom = 0):
 	return scaled_score
 
 
-def extract_annotations(df, chromosome, position):
-	return df[(df['chrom'] == chromosome) & (df['start'] <= position) & (df['end'] >= position)]
+def extract_annotations(df, position):
+	# return df[(df['chrom'] == chromosome) & (df['start'] <= position) & (df['end'] >= position)]
+	return df[(df['start'] <= position) & (df['end'] >= position)]
 
 
+def slice_annotation(df, chromosome, position, tolerance=3_000_000):
+	"""
+	Slice the genomic feature dataframe to a nearby window to reduce overhead.
+	"""
+	return df[
+		(df['chrom'] == chromosome) &
+		(df['end'] >= position - tolerance) &
+		(df['start'] <= position + tolerance)
+	].copy()
 
-def get_closest_annotation(df, chromosome, position, column_name):
+def get_closest_annotation(df, position, column_name):
 
-	df = df[df['chrom'] == chromosome].copy()
+	# df = df[df['chrom'] == chromosome].copy()
 
 	df["distance"] = np.where(
 		(df["start"] <= position) & (df["end"] >= position),
@@ -140,6 +150,7 @@ def get_closest_annotation(df, chromosome, position, column_name):
 	df = df[df["distance"] == df["distance"].min()]
 	
 	return list(df[column_name].unique())[0], df['distance'].tolist()[0]
+
 
 
 
