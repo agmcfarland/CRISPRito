@@ -356,11 +356,6 @@ def test_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg3
 
 	df_genomic_positions = pd.read_csv(path_to_hg38_refseq)
 
-	# print('\n')
-	# print(df_genomic_positions)
-	# print(df_genomic_positions.columns)
-
-
 	expected_results = {
 	'CutSite(chrom=chr1, strand=+, ref_pos=183741771, cut=183741786 diversity=1)': {'genomic_full': 4,
 	'genomic_summary':2,
