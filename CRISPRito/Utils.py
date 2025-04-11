@@ -123,7 +123,6 @@ def scale_zscore(score:list, degrees_of_freedom = 0):
 
 
 def extract_annotations(df, position):
-	# return df[(df['chrom'] == chromosome) & (df['start'] <= position) & (df['end'] >= position)]
 	return df[(df['start'] <= position) & (df['end'] >= position)]
 
 
@@ -138,8 +137,6 @@ def slice_annotation(df, chromosome, position, tolerance=3_000_000):
 	].copy()
 
 def get_closest_annotation(df, position, column_name):
-
-	# df = df[df['chrom'] == chromosome].copy()
 
 	df["distance"] = np.where(
 		(df["start"] <= position) & (df["end"] >= position),
