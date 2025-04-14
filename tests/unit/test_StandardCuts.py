@@ -52,6 +52,36 @@ def test_load_cut_sites_group1(load_1_group_samplesheet_ptprc):
 	assert len(standard_group.df_cut_sites) == 19
 
 
+def test_remove_cluster_duplicates(load_1_group_samplesheet_ptprc):
+	"""
+	pytest -sv tests/unit/test_StandardCuts.py::test_remove_cluster_duplicates
+	"""
+
+	standard_group = StandardCuts(sample_sheet = load_1_group_samplesheet_ptprc)	
+
+	standard_group.load_cut_sites()
+
+	standard_group.cluster_cut_sites()
+
+	standard_group.update_cut_cluster_id()
+
+	df_add = standard_group.df_cut_sites.copy()
+	
+	df_add['position'] = df_add['position'] + 2
+	
+	df_add['score'] = df_add['score'] + 0.05 
+
+	assert len(standard_group.df_cut_sites) == 19
+
+	standard_group.df_cut_sites = pd.concat([standard_group.df_cut_sites, df_add])
+
+	assert len(standard_group.df_cut_sites) == 38
+	
+	standard_group.remove_cluster_duplicates()
+
+	assert len(standard_group.df_cut_sites) == 19
+
+
 def test_load_cut_sites_group2(load_2_group_samplesheet_ptprc):
 	"""
 	pytest -sv tests/unit/test_StandardCuts.py::test_load_cut_sites_group2

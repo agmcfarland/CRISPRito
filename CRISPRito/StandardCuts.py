@@ -41,11 +41,18 @@ class StandardCuts:
 			'fwd_NGG' : 3
 		}
 		self.cut_distance = 3
-		
-
-	def load_cut_sites(self):
 
 		self.df_cut_sites = pd.DataFrame()
+
+		self.cut_sites = []
+
+	def __repr__(self):
+		return f'StandardCuts\n{self.sample_sheet}\n{self.df_cut_sites}'
+
+	def __len__(self):
+		return len(self.df_cut_sites)
+
+	def load_cut_sites(self):
 		
 		for _, row in self.sample_sheet.iterrows():
 			
@@ -55,6 +62,17 @@ class StandardCuts:
 			
 			self.df_cut_sites = pd.concat([self.df_cut_sites, df_sample])
 
+		self.df_cut_sites = self.df_cut_sites.merge(self.sample_sheet[['id', 'measurement_type']], on = 'id')
+
+	def remove_cluster_duplicates(self):
+		"""
+		Keep highest scoring 
+		"""
+		self.df_cut_sites = (
+			self.df_cut_sites.sort_values('score', ascending=False)
+			.drop_duplicates(subset=['cut_cluster', 'id'])
+			.reset_index(drop=True)
+		)
 
 	def update_cut_cluster_id(self):
 		"""
@@ -97,6 +115,11 @@ class StandardCuts:
 
 		self.df_cut_sites['min_max'] = self.df_cut_sites.groupby('id')['score'].transform(lambda x: scale_min_max(x.tolist()))
 
+		self.df_cut_sites['min_max'] = self.df_cut_sites.apply(lambda x: x['score'] if x['measurement_type'] == 'one_scaled' else x['min_max'], axis = 1)
+
+		self.df_cut_sites = (self.df_cut_sites.sort_values(['id', 'score'], ascending=[True, False]).assign(ordered_rank=lambda x: x.groupby('id').cumcount() + 1))
+
+
 
 	def load_genome(self, genome_path):
 		if not os.path.exists(genome_path):
@@ -136,17 +159,18 @@ class StandardCuts:
 		self.df_reference_cut_sites = df_sequence
 
 
+
 	def build_cut_sites(self):
 		"""
 		"""
-
-		self.cut_sites = []
 
 		for _, row in self.df_reference_cut_sites.iterrows():
 			
 			df_cluster_subset = self.df_cut_sites[self.df_cut_sites['cut_cluster'] == row.cut_cluster]
 			
 			df_cluster_subset = df_cluster_subset[['position', 'score', 'id']]
+
+
 
 			standard_cut = CutSite(
 				chromosome = row.chromosome,
