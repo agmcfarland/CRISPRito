@@ -117,8 +117,7 @@ class StandardCuts:
 
 		self.df_cut_sites['min_max'] = self.df_cut_sites.apply(lambda x: x['score'] if x['measurement_type'] == 'one_scaled' else x['min_max'], axis = 1)
 
-		self.df_cut_sites = (self.df_cut_sites.sort_values(['id', 'score'], ascending=[True, False]).assign(ordered_rank=lambda x: x.groupby('id').cumcount() + 1))
-
+		self.df_cut_sites = (self.df_cut_sites.sort_values(['id', 'score'], ascending=[True, False]).assign(local_rank=lambda x: x.groupby('id').cumcount() + 1))
 
 
 	def load_genome(self, genome_path):
@@ -159,6 +158,34 @@ class StandardCuts:
 		self.df_reference_cut_sites = df_sequence
 
 
+	def standardize_cuts(self, genome_path, df_genomic_features):
+
+		self.load_cut_sites()
+
+		self.cluster_cut_sites()
+
+		self.update_cut_cluster_id()
+
+		self.remove_cluster_duplicates()
+
+		self.standardize_scores()
+
+		self.load_genome(genome_path = genome_path)
+
+		self.extract_cut_region()
+
+		self.build_cut_sites()
+
+		self.parallel_build_cut_site_alignment()
+
+		self.multithread_build_cut_site_annotation(df_genomic_features = df_genomic_features)
+
+		cut_profile = []
+		for standard_cut in self.cut_sites:
+			cut_profile.append(standard_cut)
+
+		self.df_cut_profile = pd.DataFrame(cut_profile)
+
 
 	def build_cut_sites(self):
 		"""
@@ -167,10 +194,6 @@ class StandardCuts:
 		for _, row in self.df_reference_cut_sites.iterrows():
 			
 			df_cluster_subset = self.df_cut_sites[self.df_cut_sites['cut_cluster'] == row.cut_cluster]
-			
-			df_cluster_subset = df_cluster_subset[['position', 'score', 'id']]
-
-
 
 			standard_cut = CutSite(
 				chromosome = row.chromosome,
@@ -224,6 +247,8 @@ class StandardCuts:
 	def single_build_cut_site_alignment(self):
 		self.cut_sites = [build_cut_site_alignment_worker(i) for i in self.cut_sites]
 
+	# def collect_cut_sit
+
 
 def build_cut_site_alignment_worker(cut_site):
 	cut_site.find_best_sgRNA_alignment()
@@ -233,6 +258,7 @@ def build_cut_site_alignment_worker(cut_site):
 
 def build_cut_site_annotation_worker(cut_site, df_genomic_features):
 	cut_site.identify_genomic_features(df = df_genomic_features)
+	cut_site.build_local_score()
 	return cut_site
 
 
@@ -331,8 +357,28 @@ class CutSite:
 		self.features['nearest_gene'], self.features['nearest_gene_distance'] = get_closest_annotation(df = df, position = self.global_position['cut'], column_name = 'name2')
 
 
-	def build_genomic_score_table(self):
-		pass
+	def build_local_score(self):
+		cut_site_features = self.features.get('genomic_full')
+
+		self.local_score = {
+			'exon': 0,
+			'intron': 0,
+			'intergenic': 0,
+			'overlap': len(self.detail),
+			'mean_z_score': self.detail['zscore'].mean().astype(float),
+			'mean_min_max_score': self.detail['min_max'].mean().astype(float),
+			'mean_ordered_rank': self.detail['local_rank'].mean().astype(float)
+		}
+
+		if cut_site_features is not None and not cut_site_features.empty:
+			present_features = set(cut_site_features['feature'].unique())
+			for feature in ('exon', 'intron'):
+				self.local_score[feature] = int(feature in present_features)
+
+		if sum([self.local_score['exon'], self.local_score['intron']]) == 0:
+			self.local_score['intergenic'] = 1
+
+		
 
 
 	# def score_cut(self):
