@@ -18,7 +18,9 @@ from CRISPRito.Utils import (
 	sequence_slice_locations,
 	extract_annotations,
 	get_closest_annotation,
-	slice_annotation
+	slice_annotation,
+	central_tendency,
+	report_time
 	)
 
 
@@ -182,7 +184,7 @@ class StandardCuts:
 
 		cut_profile = []
 		for standard_cut in self.cut_sites:
-			cut_profile.append(standard_cut)
+			cut_profile.append(standard_cut.profile)
 
 		self.df_cut_profile = pd.DataFrame(cut_profile)
 
@@ -210,20 +212,22 @@ class StandardCuts:
 
 			self.cut_sites.append(standard_cut)
 
-
+	@report_time
 	def multithread_build_cut_site_annotation(self, df_genomic_features, max_workers = None):
 		if max_workers is None:
 			max_workers = multiprocessing.cpu_count()
 
-		with ThreadPoolExecutor(max_workers= max_workers) as executor:
-			# self.cut_sites = list(tqdm(executor.map(build_cut_site_profile_worker, self.cut_sites), total=len(self.cut_sites)))
-			self.cut_sites = list(executor.map(
+		with ThreadPoolExecutor(max_workers=max_workers) as executor:
+		# with ProcessPoolExecutor(max_workers=max_workers) as executor:
+			# Wrap tqdm *around* executor.map with total specified
+			futures = executor.map(
 				build_cut_site_annotation_worker,
 				self.cut_sites,
 				repeat(df_genomic_features)
-				)
 			)
+			self.cut_sites = list(tqdm(futures, total=len(self.cut_sites)))
 
+	@report_time
 	def parallel_build_cut_site_alignment(self, max_workers=None):
 		"""
 		Parallelize sgRNA alignment across all CutSite objects
@@ -258,7 +262,7 @@ def build_cut_site_alignment_worker(cut_site):
 
 def build_cut_site_annotation_worker(cut_site, df_genomic_features):
 	cut_site.identify_genomic_features(df = df_genomic_features)
-	cut_site.build_local_score()
+	cut_site.build_cut_profile()
 	return cut_site
 
 
@@ -284,6 +288,8 @@ class CutSite:
 		self.cut_distance = cut_distance
 
 		self.detail = detail
+
+		self.cut_cluster = self.detail.cut_cluster.unique().item()
 
 		self.flank_size = flank_size
 
@@ -346,7 +352,7 @@ class CutSite:
 				}
 			self.global_position['cut'] = self.global_position['protospacer_start'] - self.cut_distance	
 
-	def identify_genomic_features(self, df, tolerance = 3_000_000):
+	def identify_genomic_features(self, df, tolerance = 1_000_000):
 
 		df = slice_annotation(df, chromosome = self.chromosome, position = self.global_position['cut'])
 
@@ -357,27 +363,48 @@ class CutSite:
 		self.features['nearest_gene'], self.features['nearest_gene_distance'] = get_closest_annotation(df = df, position = self.global_position['cut'], column_name = 'name2')
 
 
-	def build_local_score(self):
-		cut_site_features = self.features.get('genomic_full')
+	def build_cut_profile(self):
 
-		self.local_score = {
+		self.profile = {
+			'cut_cluster': self.cut_cluster,
+			'chromosome': self.chromosome,
+			'strand': self.strand,
+			'cut': 0,
 			'exon': 0,
 			'intron': 0,
 			'intergenic': 0,
-			'overlap': len(self.detail),
-			'mean_z_score': self.detail['zscore'].mean().astype(float),
-			'mean_min_max_score': self.detail['min_max'].mean().astype(float),
-			'mean_ordered_rank': self.detail['local_rank'].mean().astype(float)
-		}
+			'overlap': len(self.detail)
+			}
+
+		# genomic feature
+		cut_site_features = self.features.get('genomic_full')
 
 		if cut_site_features is not None and not cut_site_features.empty:
 			present_features = set(cut_site_features['feature'].unique())
 			for feature in ('exon', 'intron'):
-				self.local_score[feature] = int(feature in present_features)
+				self.profile[feature] = int(feature in present_features)
 
-		if sum([self.local_score['exon'], self.local_score['intron']]) == 0:
-			self.local_score['intergenic'] = 1
+		if sum([self.profile['exon'], self.profile['intron']]) == 0:
+			self.profile['intergenic'] = 1
 
+		self.profile['nearest_gene'] = self.features['nearest_gene']
+		self.profile['nearest_gene_distance'] = self.features['nearest_gene_distance']
+
+		# measurements
+		for measurement in ['zscore', 'min_max', 'local_rank']:
+			result = central_tendency(self.detail[measurement])
+			self.profile[f'{measurement}_mean'] = result['mean']
+			self.profile[f'{measurement}_min'] = result['min']
+			self.profile[f'{measurement}_max'] = result['max']
+			self.profile[f'{measurement}_median'] = result['50%']
+
+		# global position
+		for feature in ['cut', 'protospacer_start', 'protospacer_stop']:
+			self.profile[feature] = self.global_position[feature]
+
+		# alignment
+		for feature in ['aligned_sequence', 'aligned_gRNA', 'PAM', 'alignment_length']:
+			self.profile[feature] = self.alignment[feature]
 		
 
 

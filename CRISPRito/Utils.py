@@ -1,12 +1,14 @@
 import time
 import gzip
 import numpy as np
+import pandas as pd
 from Bio import SeqIO
 from Bio.Seq import Seq
 from skbio import DNA
 from skbio.alignment import global_pairwise_align_nucleotide
 from scipy.stats import zscore
 from sklearn.preprocessing import MinMaxScaler
+import pyranges as pr
 
 def greedy_clustering_first(numbers, range_threshold):
 	"""
@@ -122,35 +124,91 @@ def scale_zscore(score:list, degrees_of_freedom = 0):
 	return scaled_score
 
 
-def extract_annotations(df, position):
-	return df[(df['start'] <= position) & (df['end'] >= position)]
+# def extract_annotations(df, position):
+# 	return df[(df['start'] <= position) & (df['end'] >= position)]
+
+def slice_annotation(gr, chromosome, position, tolerance=3_000_000):
+	"""Slice a PyRanges object to a nearby window."""
+	start = position - tolerance
+	end = position + tolerance
+
+	# Filter by chromosome first
+	gr_chr = gr[gr.Chromosome == chromosome]
+
+	# Access the underlying DataFrame to apply complex logic
+	df_filtered = gr_chr.df[
+		(gr_chr.df.Start <= end) & (gr_chr.df.End >= start)
+	]
+
+	return pr.PyRanges(df_filtered)
 
 
-def slice_annotation(df, chromosome, position, tolerance=3_000_000):
-	"""
-	Slice the genomic feature dataframe to a nearby window to reduce overhead.
-	"""
-	return df[
-		(df['chrom'] == chromosome) &
-		(df['end'] >= position - tolerance) &
-		(df['start'] <= position + tolerance)
-	].copy()
+def extract_annotations(gr, position, chromosome):
+	"""Return all rows where the cut site overlaps a genomic feature."""
+	site = pr.from_dict({
+		"Chromosome": [chromosome],
+		"Start": [position],
+		"End": [position + 1]  # PyRanges is 0-based, half-open
+	})
 
-def get_closest_annotation(df, position, column_name):
+	return gr.overlap(site)
 
-	df["distance"] = np.where(
-		(df["start"] <= position) & (df["end"] >= position),
-		0,
-		np.minimum(np.abs(df["start"] - position), np.abs(df["end"] - position))
-	)
+def get_closest_annotation(gr, position, column_name="name2"):
+	"""Find nearest annotation and its distance."""
+	site = pr.from_dict({
+		"Start": [position],
+		"End": [position + 1]
+	})
 
-	df = df[df["distance"] == df["distance"].min()]
+	nearest = gr.nearest(site, how="upstream_and_downstream")
+
+	gene = nearest.df[column_name].values[0]
+	distance = nearest.df["Distance"].values[0]
+
+	return gene, distance
+
+
+# def extract_annotations(df, position):
+# 	start_le = df['start'].values <= position
+# 	end_ge = df['end'].values >= position
+# 	return df[start_le & end_ge]
+
+# def slice_annotation(df, chromosome, position, tolerance=3_000_000):
+# 	"""
+# 	Slice the genomic feature dataframe to a nearby window to reduce overhead.
+# 	"""
+# 	return df[
+# 		(df['chrom'] == chromosome) &
+# 		(df['end'] >= position - tolerance) &
+# 		(df['start'] <= position + tolerance)
+# 	].copy()
+
+# def get_closest_annotation(df, position, column_name):
+
+# 	df["distance"] = np.where(
+# 		(df["start"] <= position) & (df["end"] >= position),
+# 		0,
+# 		np.minimum(np.abs(df["start"] - position), np.abs(df["end"] - position))
+# 	)
+
+# 	df = df[df["distance"] == df["distance"].min()]
 	
-	return list(df[column_name].unique())[0], df['distance'].tolist()[0]
+# 	return list(df[column_name].unique())[0], df['distance'].tolist()[0]
+
+
+def central_tendency(measurement: pd.core.series.Series):
+	return measurement.describe()[['mean', 'min', 'max', '50%']].to_dict()
 
 
 
-
+def report_time(func):
+	def wrapper(*args, **kwargs):
+		time_start = time.time()
+		print('Start:', func)
+		result = func(*args, **kwargs)
+		print('End:', func, time.time()-time_start)
+		return result
+	return wrapper
 
 
 
