@@ -12,7 +12,7 @@ python -m pytest -sv tests/unit/test_extract_sequences.py
 
 python -m pytest -sv tests/unit/test_StandardCuts.py
 
-python -m pytest -sv tests/unit/test_various_annotations.py
+python -m pytest -sv tests/unit/test_various_annotations_pyranges.py
 
 
 pytest -sv tests/unit/test_StandardCuts.py::test_multiprocessing_cut_site_alignment
