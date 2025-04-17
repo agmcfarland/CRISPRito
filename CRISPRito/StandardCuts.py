@@ -5,9 +5,10 @@ from os.path import join as pjoin
 from Bio.Seq import Seq
 from skbio import DNA
 from skbio.alignment import global_pairwise_align_nucleotide
-from concurrent.futures import ProcessPoolExecutor, as_completed, ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing
 from tqdm import tqdm
+import pyranges as pr
 from CRISPRito.Utils import (
 	greedy_clustering_incremental,
 	retrieve_genome_slices_memoryview,
@@ -16,11 +17,11 @@ from CRISPRito.Utils import (
 	scale_min_max,
 	parse_global_alignment,
 	sequence_slice_locations,
-	extract_annotations,
-	get_closest_annotation,
-	slice_annotation,
 	central_tendency,
-	report_time
+	report_time,
+	convert_df_to_granges,
+	batch_overlaps,
+	batch_nearest_feature
 	)
 
 
@@ -45,6 +46,8 @@ class StandardCuts:
 		self.cut_distance = 3
 
 		self.df_cut_sites = pd.DataFrame()
+
+		self.df_cut_profiles = None
 
 		self.cut_sites = []
 
@@ -159,40 +162,49 @@ class StandardCuts:
 
 		self.df_reference_cut_sites = df_sequence
 
-
-	def standardize_cuts(self, genome_path, df_genomic_features):
-
-		self.load_cut_sites()
-
-		self.cluster_cut_sites()
-
-		self.update_cut_cluster_id()
-
-		self.remove_cluster_duplicates()
-
-		self.standardize_scores()
-
-		self.load_genome(genome_path = genome_path)
-
-		self.extract_cut_region()
-
-		self.build_cut_sites()
-
-		self.parallel_build_cut_site_alignment()
-
-		self.multithread_build_cut_site_annotation(df_genomic_features = df_genomic_features)
-
-		cut_profile = []
+	def assign_features(self, all_features, gene_names):
+		"""
+		all_features must have "feature" column
+		gene_names must have "gene_id" as column for gene name
+		"""
+		all_standard_cuts = []
 		for standard_cut in self.cut_sites:
-			cut_profile.append(standard_cut.profile)
+			all_standard_cuts.append({'Chromosome': standard_cut.chromosome , 'Start': standard_cut.global_position['cut'], 'End': standard_cut.global_position['cut'], 'cut_cluster': standard_cut.cut_cluster})
 
-		self.df_cut_profile = pd.DataFrame(cut_profile)
+		all_standard_cuts = convert_df_to_granges(pd.DataFrame(all_standard_cuts))
+
+		all_features = convert_df_to_granges(all_features)
+
+		gene_names = convert_df_to_granges(gene_names)		
+
+		feature_cut_overlaps = batch_overlaps(gr = all_features, sites_gr = all_standard_cuts)
+
+		feature_cut_overlaps = feature_cut_overlaps.drop(columns = ['Start', 'End', 'name2']).rename(columns = {'Start_b': 'Start', 'End_b': 'End'})
+
+		feature_cut_nearest = batch_nearest_feature(gr = gene_names, sites_gr = all_standard_cuts)
+
+		feature_cut_nearest = feature_cut_nearest.drop(columns = ['Start', 'End']).rename(columns = {'Start_b': 'Start', 'End_b': 'End', 'name2': 'name'})
+
+		for standard_cut in self.cut_sites:
+			standard_cut.extract_features(df = feature_cut_overlaps)
+			standard_cut.extract_nearest_gene(df = feature_cut_nearest)
+
+
+	def build_cut_profile(self):
+		for standard_cut in self.cut_sites:
+			standard_cut.build_cut_profile()
+
+	def cut_profiles_to_df(self):
+		cut_profiles = []
+		for standard_cut in self.cut_sites:
+			cut_profiles.append(standard_cut.profile)
+
+		self.df_cut_profiles = pd.DataFrame(cut_profiles)
 
 
 	def build_cut_sites(self):
 		"""
 		"""
-
 		for _, row in self.df_reference_cut_sites.iterrows():
 			
 			df_cluster_subset = self.df_cut_sites[self.df_cut_sites['cut_cluster'] == row.cut_cluster]
@@ -212,20 +224,21 @@ class StandardCuts:
 
 			self.cut_sites.append(standard_cut)
 
-	@report_time
-	def multithread_build_cut_site_annotation(self, df_genomic_features, max_workers = None):
-		if max_workers is None:
-			max_workers = multiprocessing.cpu_count()
+	# @report_time
+	# def multithread_build_cut_site_annotation(self, gr_genomic_features, max_workers=None):
+	# 	if max_workers is None:
+	# 		max_workers = multiprocessing.cpu_count()
 
-		with ThreadPoolExecutor(max_workers=max_workers) as executor:
-		# with ProcessPoolExecutor(max_workers=max_workers) as executor:
-			# Wrap tqdm *around* executor.map with total specified
-			futures = executor.map(
-				build_cut_site_annotation_worker,
-				self.cut_sites,
-				repeat(df_genomic_features)
-			)
-			self.cut_sites = list(tqdm(futures, total=len(self.cut_sites)))
+	# 	df_features = gr_genomic_features.df.copy()
+
+	# 	with ThreadPoolExecutor(max_workers=max_workers) as executor:
+	# 		futures = executor.map(
+	# 			build_cut_site_annotation_worker,
+	# 			self.cut_sites,
+	# 			repeat(df_features)
+	# 		)
+	# 		self.cut_sites = list(tqdm(futures, total=len(self.cut_sites), desc="Annotating"))
+
 
 	@report_time
 	def parallel_build_cut_site_alignment(self, max_workers=None):
@@ -239,7 +252,7 @@ class StandardCuts:
 			futures = {executor.submit(build_cut_site_alignment_worker, cut_site): cut_site for cut_site in self.cut_sites}
 
 			results = []
-			for future in as_completed(futures):
+			for future in tqdm(as_completed(futures), total=len(futures), desc="Aligning"):
 				try:
 					result = future.result()
 					results.append(result)
@@ -248,21 +261,14 @@ class StandardCuts:
 
 		self.cut_sites = results
 
+	@report_time
 	def single_build_cut_site_alignment(self):
 		self.cut_sites = [build_cut_site_alignment_worker(i) for i in self.cut_sites]
-
-	# def collect_cut_sit
 
 
 def build_cut_site_alignment_worker(cut_site):
 	cut_site.find_best_sgRNA_alignment()
 	cut_site.calculate_global_positions()
-	return cut_site
-
-
-def build_cut_site_annotation_worker(cut_site, df_genomic_features):
-	cut_site.identify_genomic_features(df = df_genomic_features)
-	cut_site.build_cut_profile()
 	return cut_site
 
 
@@ -299,11 +305,13 @@ class CutSite:
 			'cut': None
 		}
 
+		self.cut_site = None
+
 	def __len__(self):
 		return len(self.detail) 
 
 	def __repr__(self):
-		return f"CutSite(chrom={self.chromosome}, strand={self.strand}, ref_pos={self.ref_position}, cut={self.global_position['cut']} diversity={len(self)})"
+		return f"CutSite(chrom={self.chromosome}, strand={self.strand}, ref_pos={self.ref_position}, cut={self.cut_site} diversity={len(self)})"
 
 	def find_best_sgRNA_alignment(self):
 		"""
@@ -338,6 +346,7 @@ class CutSite:
 		for k,v in self.alignment.items():
 			print(f'{k}: {v}')
 
+
 	def calculate_global_positions(self):
 		if self.strand == '-':
 			self.global_position = {
@@ -352,15 +361,18 @@ class CutSite:
 				}
 			self.global_position['cut'] = self.global_position['protospacer_start'] - self.cut_distance	
 
-	def identify_genomic_features(self, df, tolerance = 1_000_000):
+		self.cut_site = self.global_position['cut']
 
-		df = slice_annotation(df, chromosome = self.chromosome, position = self.global_position['cut'])
+	def extract_features(self, df):
+		self.features['feature_full'] = df[df['cut_cluster'] == self.cut_cluster]
 
-		self.features['genomic_full'] = extract_annotations(df = df, position = self.global_position['cut'])
 
-		self.features['genomic_summary'] = self.features['genomic_full'].drop_duplicates(subset=["name2", "feature"])
+	def extract_nearest_gene(self, df):
+		df = df[df['cut_cluster'] == self.cut_cluster]
 
-		self.features['nearest_gene'], self.features['nearest_gene_distance'] = get_closest_annotation(df = df, position = self.global_position['cut'], column_name = 'name2')
+		self.features['nearest_gene'] = df.gene.item()
+
+		self.features['nearest_gene_distance'] = df.Distance.item()
 
 
 	def build_cut_profile(self):
@@ -377,7 +389,7 @@ class CutSite:
 			}
 
 		# genomic feature
-		cut_site_features = self.features.get('genomic_full')
+		cut_site_features = self.features.get('feature_full')
 
 		if cut_site_features is not None and not cut_site_features.empty:
 			present_features = set(cut_site_features['feature'].unique())
@@ -388,6 +400,7 @@ class CutSite:
 			self.profile['intergenic'] = 1
 
 		self.profile['nearest_gene'] = self.features['nearest_gene']
+
 		self.profile['nearest_gene_distance'] = self.features['nearest_gene_distance']
 
 		# measurements
@@ -402,11 +415,15 @@ class CutSite:
 		for feature in ['cut', 'protospacer_start', 'protospacer_stop']:
 			self.profile[feature] = self.global_position[feature]
 
+		# local position
+		for feature in ['local_start', 'local_stop']:
+			self.profile[feature] = self.alignment[feature]
+
+
 		# alignment
 		for feature in ['aligned_sequence', 'aligned_gRNA', 'PAM', 'alignment_length']:
 			self.profile[feature] = self.alignment[feature]
 		
-
 
 	# def score_cut(self):
 	# 	"""

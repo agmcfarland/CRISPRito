@@ -2,8 +2,10 @@ from unittest.mock import patch
 import pytest
 import time
 import pandas as pd
+import pyranges as pr
 from os.path import join as pjoin
 from CRISPRito.StandardCuts import StandardCuts
+from CRISPRito.Utils import convert_df_to_granges
 
 @pytest.fixture
 def load_1_group_samplesheet_ptprc(project_test_data_directory):
@@ -66,9 +68,9 @@ def test_remove_cluster_duplicates(load_1_group_samplesheet_ptprc):
 	standard_group.update_cut_cluster_id()
 
 	df_add = standard_group.df_cut_sites.copy()
-	
+
 	df_add['position'] = df_add['position'] + 2
-	
+
 	df_add['score'] = df_add['score'] + 0.05 
 
 	assert len(standard_group.df_cut_sites) == 19
@@ -395,92 +397,92 @@ def test_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg3
 	"""
 
 	expected_results = {
-	'CutSite(chrom=chr1, strand=+, ref_pos=183741771, cut=183741786 diversity=1)': {'genomic_full': 4,
-	'genomic_summary':2,
+	'CutSite(chrom=chr1, strand=+, ref_pos=183741771, cut=183741786 diversity=1)': {'feature_full': 4,
+	# 'genomic_summary':2,
 	'nearest_gene':'RGL1',
 	'nearest_gene_distance':0.0},
 
 
-	'CutSite(chrom=chr1, strand=+, ref_pos=198706743, cut=198706753 diversity=3)': {'genomic_full': 2,
-	'genomic_summary':1,
+	'CutSite(chrom=chr1, strand=+, ref_pos=198706743, cut=198706753 diversity=3)': {'feature_full': 2,
+	# 'genomic_summary':1,
 	'nearest_gene':'PTPRC',
 	'nearest_gene_distance':0.0},
 
 
-	'CutSite(chrom=chr14, strand=+, ref_pos=40300864, cut=40300879 diversity=1)': {'genomic_full': 0,
-	'genomic_summary':0,
+	'CutSite(chrom=chr14, strand=+, ref_pos=40300864, cut=40300879 diversity=1)': {'feature_full': 0,
+	# 'genomic_summary':0,
 	'nearest_gene':'FBXO33',
-	'nearest_gene_distance':868446.0},
+	'nearest_gene_distance':868447.0},
 
 
-	'CutSite(chrom=chr18, strand=+, ref_pos=57630524, cut=57630539 diversity=1)': {'genomic_full': 0,
-	'genomic_summary':0,
+	'CutSite(chrom=chr18, strand=+, ref_pos=57630524, cut=57630539 diversity=1)': {'feature_full': 0,
+	# 'genomic_summary':0,
 	'nearest_gene':'NARS1',
-	'nearest_gene_distance':8703.0},
+	'nearest_gene_distance':8704.0},
 
 
-	'CutSite(chrom=chr18, strand=-, ref_pos=41108133, cut=41108140 diversity=1)': {'genomic_full': 0,
-	'genomic_summary':0,
+	'CutSite(chrom=chr18, strand=-, ref_pos=41108133, cut=41108140 diversity=1)': {'feature_full': 0,
+	# 'genomic_summary':0,
 	'nearest_gene':'PIK3C3',
-	'nearest_gene_distance':847093.0},
+	'nearest_gene_distance':847094.0},
 
 
-	'CutSite(chrom=chr2, strand=-, ref_pos=143961591, cut=143961596 diversity=3)': {'genomic_full': 27,
-	'genomic_summary':1,
+	'CutSite(chrom=chr2, strand=-, ref_pos=143961591, cut=143961596 diversity=3)': {'feature_full': 27,
+	# 'genomic_summary':1,
 	'nearest_gene':'GTDC1',
 	'nearest_gene_distance':0.0},
 
 
-	'CutSite(chrom=chr2, strand=-, ref_pos=184581387, cut=184581394 diversity=1)': {'genomic_full': 0,
-	'genomic_summary':0,
+	'CutSite(chrom=chr2, strand=-, ref_pos=184581387, cut=184581394 diversity=1)': {'feature_full': 0,
+	# 'genomic_summary':0,
 	'nearest_gene':'ZNF804A',
-	'nearest_gene_distance':17134.0},
+	'nearest_gene_distance':17135.0},
 
 
-	'CutSite(chrom=chr3, strand=+, ref_pos=65866797, cut=65866814 diversity=1)': {'genomic_full': 3,
-	'genomic_summary':1,
+	'CutSite(chrom=chr3, strand=+, ref_pos=65866797, cut=65866814 diversity=1)': {'feature_full': 3,
+	# 'genomic_summary':1,
 	'nearest_gene':'MAGI1',
 	'nearest_gene_distance':0.0},
 
 
-	'CutSite(chrom=chr3, strand=+, ref_pos=138494328, cut=138494327 diversity=1)': {'genomic_full': 0,
-	'genomic_summary':0,
+	'CutSite(chrom=chr3, strand=+, ref_pos=138494328, cut=138494327 diversity=1)': {'feature_full': 0,
+	# 'genomic_summary':0,
 	'nearest_gene':'CEP70',
-	'nearest_gene_distance':16.0},
+	'nearest_gene_distance':17.0},
 
 
-	'CutSite(chrom=chr6, strand=-, ref_pos=100224884, cut=100224884 diversity=1)': {'genomic_full': 0,
-	'genomic_summary':0,
+	'CutSite(chrom=chr6, strand=-, ref_pos=100224884, cut=100224884 diversity=1)': {'feature_full': 0,
+	# 'genomic_summary':0,
 	'nearest_gene':'SIM1',
-	'nearest_gene_distance':160124.0},
+	'nearest_gene_distance':160125.0},
 
 
-	'CutSite(chrom=chr6, strand=-, ref_pos=134850663, cut=134850668 diversity=1)': {'genomic_full': 0,
-	'genomic_summary':0,
+	'CutSite(chrom=chr6, strand=-, ref_pos=134850663, cut=134850668 diversity=1)': {'feature_full': 0,
+	# 'genomic_summary':0,
 	'nearest_gene':'ALDH8A1',
-	'nearest_gene_distance':66724.0},
+	'nearest_gene_distance':66725.0},
 
 
-	'CutSite(chrom=chr7, strand=-, ref_pos=28169223, cut=28169229 diversity=1)': {'genomic_full': 1,
-	'genomic_summary':1,
+	'CutSite(chrom=chr7, strand=-, ref_pos=28169223, cut=28169229 diversity=1)': {'feature_full': 1,
+	# 'genomic_summary':1,
 	'nearest_gene':'JAZF1',
 	'nearest_gene_distance':0.0},
 
 
-	'CutSite(chrom=chr7, strand=-, ref_pos=115239484, cut=115239490 diversity=1)': {'genomic_full': 0,
-	'genomic_summary':0,
+	'CutSite(chrom=chr7, strand=-, ref_pos=115239484, cut=115239490 diversity=1)': {'feature_full': 0,
+	# 'genomic_summary':0,
 	'nearest_gene':'MDFIC',
-	'nearest_gene_distance':219573.0},
+	'nearest_gene_distance':219574.0},
 
 
-	'CutSite(chrom=chr8, strand=+, ref_pos=6301238, cut=6301255 diversity=1)': {'genomic_full': 0,
-	'genomic_summary':0,
+	'CutSite(chrom=chr8, strand=+, ref_pos=6301238, cut=6301255 diversity=1)': {'feature_full': 0,
+	# 'genomic_summary':0,
 	'nearest_gene':'MCPH1',
-	'nearest_gene_distance':105371.0},
+	'nearest_gene_distance':105372.0},
 
 
-	'CutSite(chrom=chr8, strand=+, ref_pos=28930554, cut=28930553 diversity=1)': {'genomic_full': 16,
-	'genomic_summary':2,
+	'CutSite(chrom=chr8, strand=+, ref_pos=28930554, cut=28930553 diversity=1)': {'feature_full': 16,
+	# 'genomic_summary':2,
 	'nearest_gene':'HMBOX1',
 	'nearest_gene_distance':0.0}
 	}
@@ -491,7 +493,17 @@ def test_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg3
 
 	standard_group = standard_group_1_ptprc_cut_sites
 
-	df_genomic_positions = pd.read_csv(path_to_hg38_refseq)
+	all_genomic_features = pd.read_csv(path_to_hg38_refseq)
+
+	df_feature = all_genomic_features.copy()
+
+	df_gene_names = df_feature.drop(columns = 'feature').groupby('name').agg({
+		'chrom': 'first',
+		'start': 'min',
+		'end': 'max',
+		'name2': 'first'
+		}).rename(
+	columns = {'name2': 'gene', 'goo':'ga'})
 
 	print('\n')
 
@@ -499,15 +511,50 @@ def test_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg3
 	standard_group = standard_group_1_ptprc_cut_sites
 	standard_group.parallel_build_cut_site_alignment()
 	start = time.time()
-	standard_group.multithread_build_cut_site_annotation(df_genomic_features = df_genomic_positions)
+	standard_group.assign_features(all_features = all_genomic_features, gene_names = df_gene_names)
+	standard_group.build_cut_profile()
 	print(time.time()-start)
 	check_cut_site_correct(standard_group, expected_results)
+
+def test_profiles_to_df(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
+	"""
+	pytest -sv tests/unit/test_StandardCuts.py::test_profiles_to_df
+	"""
+
+	standard_group = standard_group_1_ptprc_cut_sites
+
+	all_genomic_features = pd.read_csv(path_to_hg38_refseq)
+
+	df_feature = all_genomic_features.copy()
+
+	df_gene_names = df_feature.drop(columns = 'feature').groupby('name').agg({
+		'chrom': 'first',
+		'start': 'min',
+		'end': 'max',
+		'name2': 'first'
+		}).rename(
+	columns = {'name2': 'gene', 'goo':'ga'})
+
+	print('\n')
+
+	print('Multithreaded')
+	standard_group = standard_group_1_ptprc_cut_sites
+	standard_group.parallel_build_cut_site_alignment()
+	start = time.time()
+	standard_group.assign_features(all_features = all_genomic_features, gene_names = df_gene_names)
+	standard_group.build_cut_profile()
+	standard_group.cut_profiles_to_df()
+	# print(standard_group.df_cut_profiles)
+	assert standard_group.df_cut_profiles.shape == (15, 30)
+	print(time.time()-start)
+	# check_cut_site_correct(standard_group, expected_results)
 
 
 # def test_multiprocessing_identify_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
 # 	"""
 # 	pytest -sv tests/unit/test_StandardCuts.py::test_multiprocessing_extract_in_refseq_feature
 # 	"""
+
 # 	df_genomic_positions = pd.read_csv(path_to_hg38_refseq)
 
 

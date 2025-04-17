@@ -123,50 +123,90 @@ def scale_zscore(score:list, degrees_of_freedom = 0):
 
 	return scaled_score
 
+def batch_overlaps(gr, sites_gr):
+	return sites_gr.join(gr).df
 
-# def extract_annotations(df, position):
-# 	return df[(df['start'] <= position) & (df['end'] >= position)]
-
-def slice_annotation(gr, chromosome, position, tolerance=3_000_000):
-	"""Slice a PyRanges object to a nearby window."""
-	start = position - tolerance
-	end = position + tolerance
-
-	# Filter by chromosome first
-	gr_chr = gr[gr.Chromosome == chromosome]
-
-	# Access the underlying DataFrame to apply complex logic
-	df_filtered = gr_chr.df[
-		(gr_chr.df.Start <= end) & (gr_chr.df.End >= start)
-	]
-
-	return pr.PyRanges(df_filtered)
+def batch_nearest_feature(gr, sites_gr):
+	return sites_gr.nearest(gr, overlap = True).df
 
 
-def extract_annotations(gr, position, chromosome):
-	"""Return all rows where the cut site overlaps a genomic feature."""
-	site = pr.from_dict({
-		"Chromosome": [chromosome],
-		"Start": [position],
-		"End": [position + 1]  # PyRanges is 0-based, half-open
-	})
+def central_tendency(measurement: pd.core.series.Series):
+	return measurement.describe()[['mean', 'min', 'max', '50%']].to_dict()
 
-	return gr.overlap(site)
 
-def get_closest_annotation(gr, position, column_name="name2"):
-	"""Find nearest annotation and its distance."""
-	site = pr.from_dict({
-		"Start": [position],
-		"End": [position + 1]
-	})
+def report_time(func):
+	def wrapper(*args, **kwargs):
+		time_start = time.time()
+		print('Start:', func)
+		result = func(*args, **kwargs)
+		print('End:', func, time.time()-time_start)
+		return result
+	return wrapper
 
-	nearest = gr.nearest(site, how="upstream_and_downstream")
+def convert_df_to_granges(df):
+	df = df.rename(columns = {'chrom': 'Chromosome', 'start': 'Start', 'end': 'End'})
+	return pr.PyRanges(df)
 
-	gene = nearest.df[column_name].values[0]
-	distance = nearest.df["Distance"].values[0]
 
-	return gene, distance
+# # def extract_annotations(df, position):
+# # 	return df[(df['start'] <= position) & (df['end'] >= position)]
 
+
+# def slice_annotation(gr, chromosome, position, tolerance=3_000_000):
+# 	"""
+# 	Slice a PyRanges object to a nearby window.
+# 	"""
+# 	gr_chr = gr[gr.Chromosome == chromosome] 
+# 	gr_chr = gr_chr[position - tolerance: position + tolerance]
+# 	return gr_chr
+
+
+# def extract_annotations(gr, chromosome, position):
+# 	"""Return all rows where the cut site overlaps a genomic feature."""
+# 	site = pr.from_dict({
+# 		"Chromosome": [chromosome],
+# 		"Start": [position],
+# 		"End": [position]
+# 	})
+
+# 	return gr.overlap(site).df
+
+# def get_closest_annotation(gr, chromosome, position, column_name="name2"):
+# 	"""Find nearest annotation and its distance."""
+# 	site = pr.from_dict({
+# 		"Chromosome": [chromosome],
+# 		"Start": [position],
+# 		"End": [position]
+# 	})
+
+# 	nearest = site.k_nearest(gr, k = 1)
+
+# 	return nearest.df[column_name].values[0], abs(nearest.df["Distance"].values[0])
+
+
+
+
+# def batch_overlaps(gr, sites_gr):
+# 	return sites_gr.join(gr).df
+
+# def batch_nearest_feature(gr, sites_gr):
+# 	return sites_gr.nearest(gr, overlap = True).df
+# 	# return gr.k_nearest(sites_gr, overlap = True, k = 1).df
+
+
+# 	if len(overlaps) > 0:
+# 		result = overlaps
+# 	else:
+# 		# Step 2: Get closest if no overlaps
+# 		# result = sites_gr.k_nearest(gr, k=1)
+# 		overlaps = sites_gr.nearest(gr, overlap = True).df
+# 		print('this happened')
+
+# 	print('\n')
+# 	print(result)
+# 	# print('\n')
+# 	# print(overlaps)
+# 	# Display
 
 # def extract_annotations(df, position):
 # 	start_le = df['start'].values <= position
@@ -196,19 +236,7 @@ def get_closest_annotation(gr, position, column_name="name2"):
 # 	return list(df[column_name].unique())[0], df['distance'].tolist()[0]
 
 
-def central_tendency(measurement: pd.core.series.Series):
-	return measurement.describe()[['mean', 'min', 'max', '50%']].to_dict()
 
-
-
-def report_time(func):
-	def wrapper(*args, **kwargs):
-		time_start = time.time()
-		print('Start:', func)
-		result = func(*args, **kwargs)
-		print('End:', func, time.time()-time_start)
-		return result
-	return wrapper
 
 
 
