@@ -27,13 +27,16 @@ from CRISPRito.Utils import (
 
 class StandardCuts:
 
-	def __init__(self, sample_sheet:pd.DataFrame, flank_size:int = 30, sgRNA:str = ''):
+	def __init__(self, sample_sheet:pd.DataFrame, flank_size:int = 30, sgRNA:str = '', PAM_alignment:str = '-GG'):
 		self.sample_sheet = sample_sheet
 		self.flank_size = flank_size
+
+		# alignments processed in order of self.sgRNA 
 		self.sgRNA = {
-			'fwd' : DNA(sgRNA),
-			'fwd_NGG' : DNA(sgRNA + '-GG')
+			'fwd_NGG' : DNA(sgRNA + PAM_alignment),
+			'fwd' : DNA(sgRNA)
 		}
+
 		self.sgRNA_alignment_tolerance = {
 			'fwd' : range(18,21),
 			'fwd_NGG' : range(20,25)
@@ -135,6 +138,8 @@ class StandardCuts:
 		for k, v in self.genome.items():
 			self.genome_size[k] = len(v)
 
+
+	@report_time
 	def extract_cut_region(self):
 		"""
 		Iterate through list of positions, grouped by chromosome, and extract self.flank size bp from the mean predicted position 
@@ -150,7 +155,7 @@ class StandardCuts:
 
 		df_sequence = pd.DataFrame()
 
-		for _, df_group in chromosome_groups:
+		for _, df_group in tqdm(chromosome_groups, desc="Extracting cut regions"):
 
 			chromosome_ = df_group['chromosome'].unique().item()
 
@@ -189,11 +194,12 @@ class StandardCuts:
 			standard_cut.extract_features(df = feature_cut_overlaps)
 			standard_cut.extract_nearest_gene(df = feature_cut_nearest)
 
-
+	@report_time
 	def build_cut_profile(self):
 		for standard_cut in self.cut_sites:
 			standard_cut.build_cut_profile()
 
+	@report_time
 	def cut_profiles_to_df(self):
 		cut_profiles = []
 		for standard_cut in self.cut_sites:
@@ -329,11 +335,16 @@ class CutSite:
 
 			self.alignment['local_stop'] = self.alignment['local_stop'] - self.sgRNA_alignment_start_offset[self.alignment['sgRNA']]
 
-			self.alignment['aligned_sequence'] = self.cut_region['sequence'][self.alignment['local_start'] : self.alignment['local_stop'] + 1]
+			self.alignment['aligned_sequence'] = str(self.alignment['alignment'][0][1])[self.alignment['local_start'] : self.alignment['local_stop'] + 1]
 
 			self.alignment['aligned_gRNA'] = str(self.alignment['alignment'][0][0])[self.alignment['local_start'] : self.alignment['local_stop'] + 1]
 
 			self.alignment['alignment_length'] = len(self.alignment['aligned_sequence'])
+
+			self.alignment['aligned_sequence_gaps'] = self.alignment['aligned_sequence'].count('-')
+
+			self.alignment['aligned_gRNA_gaps'] = self.alignment['aligned_gRNA'].count('-')
+
 
 			self.alignment['PAM'] = self.cut_region['sequence'][self.alignment['local_stop'] + 1 : self.alignment['local_stop'] + 1 + 3]
 
@@ -357,7 +368,7 @@ class CutSite:
 		else:
 			self.global_position = {
 				'protospacer_stop': self.cut_region['start'] + self.alignment['local_start'],
-				'protospacer_start': self.cut_region['start'] + self.alignment['local_stop']
+				'protospacer_start': self.cut_region['start'] + self.alignment['local_stop'] - self.alignment['aligned_sequence_gaps']
 				}
 			self.global_position['cut'] = self.global_position['protospacer_start'] - self.cut_distance	
 
@@ -423,6 +434,8 @@ class CutSite:
 		# alignment
 		for feature in ['aligned_sequence', 'aligned_gRNA', 'PAM', 'alignment_length']:
 			self.profile[feature] = self.alignment[feature]
+
+		self.profile['cut_region_sequence'] = self.cut_region['sequence']
 		
 
 	# def score_cut(self):

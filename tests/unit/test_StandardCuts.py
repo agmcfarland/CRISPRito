@@ -275,7 +275,7 @@ def test_cut_site_alignment(standard_group_1_ptprc_cut_sites):
 		'TGG',
 		'AGG',
 		'TGG',
-		'GTG',
+		'TGG',
 		'AGG',
 		'AGT',
 		'AGC',
@@ -304,6 +304,11 @@ def check_cut_sites_for_pam(standard_group, expected):
 	for e, standard_cut in enumerate(standard_group.cut_sites):
 
 		assert standard_cut.alignment['PAM'] == expected[str(standard_cut)]
+		# print('\n')
+		# if standard_cut.alignment['PAM'] != expected[str(standard_cut)]:
+		# print(standard_cut)
+		# print(standard_cut.alignment)
+	
 
 
 def test_multiprocessing_cut_site_alignment(standard_group_1_ptprc_cut_sites):
@@ -320,11 +325,11 @@ def test_multiprocessing_cut_site_alignment(standard_group_1_ptprc_cut_sites):
 	'CutSite(chrom=chr18, strand=-, ref_pos=41108133, cut=41108140 diversity=1)': 'TGG',
 	'CutSite(chrom=chr2, strand=-, ref_pos=143961591, cut=143961596 diversity=3)': 'AGG',
 	'CutSite(chrom=chr2, strand=-, ref_pos=184581387, cut=184581394 diversity=1)': 'TGG',
-	'CutSite(chrom=chr3, strand=+, ref_pos=65866797, cut=65866814 diversity=1)': 'GTG',
+	'CutSite(chrom=chr3, strand=+, ref_pos=65866797, cut=65866815 diversity=1)': 'TGG', # insertion right before TGG
 	'CutSite(chrom=chr3, strand=+, ref_pos=138494328, cut=138494327 diversity=1)': 'AGG',
 	'CutSite(chrom=chr6, strand=-, ref_pos=100224884, cut=100224884 diversity=1)': 'AGT',
-	'CutSite(chrom=chr6, strand=-, ref_pos=134850663, cut=134850668 diversity=1)': 'AGC',
-	'CutSite(chrom=chr7, strand=-, ref_pos=28169223, cut=28169229 diversity=1)': 'AGA',
+	'CutSite(chrom=chr6, strand=-, ref_pos=134850663, cut=134850668 diversity=1)': 'AGC', # CRISTA predicts AGC
+	'CutSite(chrom=chr7, strand=-, ref_pos=28169223, cut=28169229 diversity=1)': 'AGA', # CRISTA predicts AGA
 	'CutSite(chrom=chr7, strand=-, ref_pos=115239484, cut=115239490 diversity=1)': 'AGG',
 	'CutSite(chrom=chr8, strand=+, ref_pos=6301238, cut=6301255 diversity=1)': 'GGG',
 	'CutSite(chrom=chr8, strand=+, ref_pos=28930554, cut=28930553 diversity=1)': 'TGG'}
@@ -356,6 +361,7 @@ def test_multiprocessing_cut_site_alignment(standard_group_1_ptprc_cut_sites):
 def test_calculate_global_positions(standard_group_1_ptprc_cut_sites):
 	"""
 	pytest -sv tests/unit/test_StandardCuts.py::test_calculate_global_positions
+	This test does not check for explicit coordinates and can be improved upon
 	"""
 
 	standard_group = standard_group_1_ptprc_cut_sites
@@ -439,7 +445,7 @@ def test_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg3
 	'nearest_gene_distance':17135.0},
 
 
-	'CutSite(chrom=chr3, strand=+, ref_pos=65866797, cut=65866814 diversity=1)': {'feature_full': 3,
+	'CutSite(chrom=chr3, strand=+, ref_pos=65866797, cut=65866815 diversity=1)': {'feature_full': 3,
 	# 'genomic_summary':1,
 	'nearest_gene':'MAGI1',
 	'nearest_gene_distance':0.0},
@@ -545,7 +551,7 @@ def test_profiles_to_df(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
 	standard_group.build_cut_profile()
 	standard_group.cut_profiles_to_df()
 	# print(standard_group.df_cut_profiles)
-	assert standard_group.df_cut_profiles.shape == (15, 30)
+	assert standard_group.df_cut_profiles.shape == (15, 31)
 	print(time.time()-start)
 	# check_cut_site_correct(standard_group, expected_results)
 
