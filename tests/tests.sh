@@ -14,7 +14,24 @@ python -m pytest -sv tests/unit/test_extract_sequences.py
 
 python -m pytest -sv tests/unit/test_various_annotations_pyranges.py
 
+pytest --disable-warnings -sv tests/unit/test_standard_cut_alignments.py
 
 pytest -sv tests/unit/test_StandardCuts.py::test_multiprocessing_cut_site_alignment
 
 pytest -sv tests/unit/test_StandardCuts.py::test_extract_in_refseq_feature
+
+
+# pytest -sv tests/unit/test_standard_cut_alignments.py::test_alignment6
+
+
+pytest --disable-warnings -sv tests/unit/test_standard_cut_alignments.py
+
+pytest -sv tests/unit/test_standard_cut_alignments.py::test_alignment1
+pytest -sv tests/unit/test_standard_cut_alignments.py::test_alignment2
+pytest -sv tests/unit/test_standard_cut_alignments.py::test_alignment3
+pytest -sv tests/unit/test_standard_cut_alignments.py::test_alignment4
+pytest -sv tests/unit/test_standard_cut_alignments.py::test_alignment5
+
+pytest -sv tests/unit/test_standard_cut_alignments.py::test_alignment6
+
+pytest --disable-warnings -sv tests/unit/test_standard_cut_alignments.py::test_alignment7

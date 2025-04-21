@@ -293,6 +293,9 @@ def test_cut_site_alignment(standard_group_1_ptprc_cut_sites):
 
 		standard_cut.find_best_sgRNA_alignment()
 
+		# if standard_cut.alignment['PAM'] not in expected:
+		# 	print(standard_cut)
+
 		assert standard_cut.alignment['PAM'] == expected[e]
 
 		# standard_cut.print_alignment_stats()
@@ -322,15 +325,15 @@ def test_multiprocessing_cut_site_alignment(standard_group_1_ptprc_cut_sites):
 	'CutSite(chrom=chr1, strand=+, ref_pos=198706743, cut=198706753 diversity=3)': 'TGG',
 	'CutSite(chrom=chr14, strand=+, ref_pos=40300864, cut=40300879 diversity=1)': 'TGG',
 	'CutSite(chrom=chr18, strand=+, ref_pos=57630524, cut=57630539 diversity=1)': 'CGG',
-	'CutSite(chrom=chr18, strand=-, ref_pos=41108133, cut=41108140 diversity=1)': 'TGG',
-	'CutSite(chrom=chr2, strand=-, ref_pos=143961591, cut=143961596 diversity=3)': 'AGG',
-	'CutSite(chrom=chr2, strand=-, ref_pos=184581387, cut=184581394 diversity=1)': 'TGG',
+	'CutSite(chrom=chr18, strand=-, ref_pos=41108133, cut=41108139 diversity=1)': 'TGG',
+	'CutSite(chrom=chr2, strand=-, ref_pos=143961591, cut=143961595 diversity=3)': 'AGG',
+	'CutSite(chrom=chr2, strand=-, ref_pos=184581387, cut=184581393 diversity=1)': 'TGG',
 	'CutSite(chrom=chr3, strand=+, ref_pos=65866797, cut=65866815 diversity=1)': 'TGG', # insertion right before TGG
 	'CutSite(chrom=chr3, strand=+, ref_pos=138494328, cut=138494327 diversity=1)': 'AGG',
-	'CutSite(chrom=chr6, strand=-, ref_pos=100224884, cut=100224884 diversity=1)': 'AGT',
-	'CutSite(chrom=chr6, strand=-, ref_pos=134850663, cut=134850668 diversity=1)': 'AGC', # CRISTA predicts AGC
-	'CutSite(chrom=chr7, strand=-, ref_pos=28169223, cut=28169229 diversity=1)': 'AGA', # CRISTA predicts AGA
-	'CutSite(chrom=chr7, strand=-, ref_pos=115239484, cut=115239490 diversity=1)': 'AGG',
+	'CutSite(chrom=chr6, strand=-, ref_pos=100224884, cut=100224883 diversity=1)': 'AGT',
+	'CutSite(chrom=chr6, strand=-, ref_pos=134850663, cut=134850667 diversity=1)': 'AGC', # CRISTA predicts AGC
+	'CutSite(chrom=chr7, strand=-, ref_pos=28169223, cut=28169228 diversity=1)': 'AGA', # CRISTA predicts AGA
+	'CutSite(chrom=chr7, strand=-, ref_pos=115239484, cut=115239489 diversity=1)': 'AGG',
 	'CutSite(chrom=chr8, strand=+, ref_pos=6301238, cut=6301255 diversity=1)': 'GGG',
 	'CutSite(chrom=chr8, strand=+, ref_pos=28930554, cut=28930553 diversity=1)': 'TGG'}
 
@@ -427,22 +430,22 @@ def test_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg3
 	'nearest_gene_distance':8704.0},
 
 
-	'CutSite(chrom=chr18, strand=-, ref_pos=41108133, cut=41108140 diversity=1)': {'feature_full': 0,
+	'CutSite(chrom=chr18, strand=-, ref_pos=41108133, cut=41108139 diversity=1)': {'feature_full': 0,
 	# 'genomic_summary':0,
 	'nearest_gene':'PIK3C3',
-	'nearest_gene_distance':847094.0},
+	'nearest_gene_distance':847095.0},
 
 
-	'CutSite(chrom=chr2, strand=-, ref_pos=143961591, cut=143961596 diversity=3)': {'feature_full': 27,
+	'CutSite(chrom=chr2, strand=-, ref_pos=143961591, cut=143961595 diversity=3)': {'feature_full': 27,
 	# 'genomic_summary':1,
 	'nearest_gene':'GTDC1',
 	'nearest_gene_distance':0.0},
 
 
-	'CutSite(chrom=chr2, strand=-, ref_pos=184581387, cut=184581394 diversity=1)': {'feature_full': 0,
+	'CutSite(chrom=chr2, strand=-, ref_pos=184581387, cut=184581393 diversity=1)': {'feature_full': 0,
 	# 'genomic_summary':0,
 	'nearest_gene':'ZNF804A',
-	'nearest_gene_distance':17135.0},
+	'nearest_gene_distance':17136.0},
 
 
 	'CutSite(chrom=chr3, strand=+, ref_pos=65866797, cut=65866815 diversity=1)': {'feature_full': 3,
@@ -457,28 +460,28 @@ def test_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg3
 	'nearest_gene_distance':17.0},
 
 
-	'CutSite(chrom=chr6, strand=-, ref_pos=100224884, cut=100224884 diversity=1)': {'feature_full': 0,
+	'CutSite(chrom=chr6, strand=-, ref_pos=100224884, cut=100224883 diversity=1)': {'feature_full': 0,
 	# 'genomic_summary':0,
 	'nearest_gene':'SIM1',
-	'nearest_gene_distance':160125.0},
+	'nearest_gene_distance':160126.0},
 
 
-	'CutSite(chrom=chr6, strand=-, ref_pos=134850663, cut=134850668 diversity=1)': {'feature_full': 0,
+	'CutSite(chrom=chr6, strand=-, ref_pos=134850663, cut=134850667 diversity=1)': {'feature_full': 0,
 	# 'genomic_summary':0,
 	'nearest_gene':'ALDH8A1',
-	'nearest_gene_distance':66725.0},
+	'nearest_gene_distance':66726.0},
 
 
-	'CutSite(chrom=chr7, strand=-, ref_pos=28169223, cut=28169229 diversity=1)': {'feature_full': 1,
+	'CutSite(chrom=chr7, strand=-, ref_pos=28169223, cut=28169228 diversity=1)': {'feature_full': 1,
 	# 'genomic_summary':1,
 	'nearest_gene':'JAZF1',
 	'nearest_gene_distance':0.0},
 
 
-	'CutSite(chrom=chr7, strand=-, ref_pos=115239484, cut=115239490 diversity=1)': {'feature_full': 0,
+	'CutSite(chrom=chr7, strand=-, ref_pos=115239484, cut=115239489 diversity=1)': {'feature_full': 0,
 	# 'genomic_summary':0,
 	'nearest_gene':'MDFIC',
-	'nearest_gene_distance':219574.0},
+	'nearest_gene_distance':219573.0},
 
 
 	'CutSite(chrom=chr8, strand=+, ref_pos=6301238, cut=6301255 diversity=1)': {'feature_full': 0,
@@ -551,7 +554,7 @@ def test_profiles_to_df(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
 	standard_group.build_cut_profile()
 	standard_group.cut_profiles_to_df()
 	# print(standard_group.df_cut_profiles)
-	assert standard_group.df_cut_profiles.shape == (15, 31)
+	assert standard_group.df_cut_profiles.shape == (15, 32)
 	print(time.time()-start)
 	# check_cut_site_correct(standard_group, expected_results)
 

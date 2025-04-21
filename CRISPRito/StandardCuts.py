@@ -21,7 +21,8 @@ from CRISPRito.Utils import (
 	report_time,
 	convert_df_to_granges,
 	batch_overlaps,
-	batch_nearest_feature
+	batch_nearest_feature,
+	find_revised_pam
 	)
 
 
@@ -326,7 +327,10 @@ class CutSite:
 		"""
 		sequence = DNA(self.cut_region['sequence'])
 
+		pam_length = 3
+
 		for seqname, query_seq in self.sgRNA.items():
+
 			self.alignment['sgRNA'] = seqname
 
 			self.alignment['alignment'] = global_pairwise_align_nucleotide(query_seq, sequence)
@@ -334,6 +338,39 @@ class CutSite:
 			self.alignment['local_start'], self.alignment['local_stop'] = parse_global_alignment(self.alignment['alignment'])
 
 			self.alignment['local_stop'] = self.alignment['local_stop'] - self.sgRNA_alignment_start_offset[self.alignment['sgRNA']]
+
+			self.alignment['local_cut'] = self.alignment['local_stop'] - self.cut_distance
+
+			# PAM search refinement
+
+			self.alignment['PAM'] = str(self.alignment['alignment'][0][1])[self.alignment['local_stop'] + 1 : self.alignment['local_stop'] + 1 + pam_length]
+
+			self.alignment['PAM_gaps'] = 0
+
+			if self.alignment['PAM'][1:] != 'GG':
+
+				pam_search_results = find_revised_pam(
+					sequence = str(self.alignment['alignment'][0][1]),
+					protospacer_start = self.alignment['local_stop'],
+					search_direction = 'forward',
+					max_pam_gaps_allowed = 2,
+					pam_type = 'NGG')
+
+				if not pam_search_results['pam_found']:
+					pam_search_results = find_revised_pam(
+						sequence = str(self.alignment['alignment'][0][1]),
+						protospacer_start = self.alignment['local_stop'],
+						search_direction = 'backward',
+						max_pam_gaps_allowed = 2,
+						pam_type = 'NGG')
+
+				if pam_search_results['pam_found']:
+
+					self.alignment['PAM'] = pam_search_results['revised_pam']
+
+					self.alignment['local_stop'] = pam_search_results['revised_protospacer_start']
+
+					self.alignment['PAM_gaps'] = pam_search_results['pam_n_gap']
 
 			self.alignment['aligned_sequence'] = str(self.alignment['alignment'][0][1])[self.alignment['local_start'] : self.alignment['local_stop'] + 1]
 
@@ -345,11 +382,6 @@ class CutSite:
 
 			self.alignment['aligned_gRNA_gaps'] = self.alignment['aligned_gRNA'].count('-')
 
-
-			self.alignment['PAM'] = self.cut_region['sequence'][self.alignment['local_stop'] + 1 : self.alignment['local_stop'] + 1 + 3]
-
-			self.alignment['local_cut'] = self.alignment['local_stop'] - self.cut_distance
-
 			if self.alignment['alignment_length'] in self.sgRNA_alignment_tolerance[seqname]:
 				break
 
@@ -359,13 +391,19 @@ class CutSite:
 
 
 	def calculate_global_positions(self):
+		"""
+		mixed
+		"""
 		if self.strand == '-':
+			# print('negative')
 			self.global_position = {
-				'protospacer_stop': self.cut_region['stop'] - self.alignment['local_start'],
-				'protospacer_start': self.cut_region['stop'] - self.alignment['local_stop']
-				}
-			self.global_position['cut'] = self.global_position['protospacer_start'] + self.cut_distance	
+				# In negative strand, 'start' is at the higher genomic position (cut_region['stop']) minus local_stop
+				'protospacer_start': self.cut_region['stop'] - self.alignment['local_stop'] + self.alignment['aligned_sequence_gaps'] - 1,
+				'protospacer_stop': self.cut_region['stop'] - self.alignment['local_start'] - 1
+			}
+			self.global_position['cut'] = self.global_position['protospacer_start'] + self.cut_distance
 		else:
+			# print('positive')
 			self.global_position = {
 				'protospacer_stop': self.cut_region['start'] + self.alignment['local_start'],
 				'protospacer_start': self.cut_region['start'] + self.alignment['local_stop'] - self.alignment['aligned_sequence_gaps']
@@ -432,7 +470,7 @@ class CutSite:
 
 
 		# alignment
-		for feature in ['aligned_sequence', 'aligned_gRNA', 'PAM', 'alignment_length']:
+		for feature in ['aligned_sequence', 'aligned_gRNA', 'alignment_length', 'PAM', 'PAM_gaps']:
 			self.profile[feature] = self.alignment[feature]
 
 		self.profile['cut_region_sequence'] = self.cut_region['sequence']

@@ -148,6 +148,41 @@ def convert_df_to_granges(df):
 	return pr.PyRanges(df)
 
 
+def find_revised_pam(sequence, protospacer_start, search_direction = 'forward', max_pam_gaps_allowed = 2, pam_type = 'NGG'):
+	if search_direction not in ['forward', 'backward']:
+		raise ValueError('search_direction must be "forward" or "backward"')
+
+	pam_length = len(pam_type)
+
+	starting_pam = sequence[protospacer_start + 1: protospacer_start + 1 + pam_length]
+
+	revised_pam = starting_pam
+
+	pam_n_gap = 0 
+
+	direction_modifier = 1
+
+	if search_direction == 'backward':
+		direction_modifier = -1
+
+	max_pam_gaps_allowed = max_pam_gaps_allowed * direction_modifier
+
+	while revised_pam[1:] != pam_type[1:] and pam_n_gap != max_pam_gaps_allowed:
+
+		revised_pam = sequence[protospacer_start + 1 + pam_n_gap + direction_modifier : protospacer_start + 1 + pam_length + pam_n_gap + direction_modifier]
+
+		pam_n_gap += direction_modifier
+
+	return {
+	'starting_pam': starting_pam,
+	'revised_pam': revised_pam,
+	'pam_n_gap': pam_n_gap,
+	'search_direction': search_direction,
+	'revised_protospacer_start': protospacer_start + pam_n_gap,
+	'pam_found': revised_pam[1:] == pam_type[1:]
+	}
+
+
 # # def extract_annotations(df, position):
 # # 	return df[(df['start'] <= position) & (df['end'] >= position)]
 
