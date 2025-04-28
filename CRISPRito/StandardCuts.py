@@ -22,7 +22,8 @@ from CRISPRito.Utils import (
 	convert_df_to_granges,
 	batch_overlaps,
 	batch_nearest_feature,
-	find_revised_pam
+	find_revised_pam,
+	df_long_to_wide
 	)
 
 
@@ -40,12 +41,12 @@ class StandardCuts:
 
 		self.sgRNA_alignment_tolerance = {
 			'fwd' : range(18,21),
-			'fwd_NGG' : range(20,25)
+			'fwd_NGG' : range(18,25)
 		}
 
 		self.sgRNA_alignment_start_offset = {
 			'fwd' : 0,
-			'fwd_NGG' : 3
+			'fwd_NGG' : len(PAM_alignment)
 		}
 		self.cut_distance = 3
 
@@ -54,9 +55,13 @@ class StandardCuts:
 		self.df_cut_profiles = None
 
 		self.cut_sites = []
+		
+		self.method_counts = pd.DataFrame()
+		
+		self.id_counts = pd.DataFrame()
 
 	def __repr__(self):
-		return f'StandardCuts\n{self.sample_sheet}\n{self.df_cut_sites}'
+		return f'StandardCuts\nSample Sheet:\n{self.sample_sheet}\nCut Sites\n{self.df_cut_sites}'
 
 	def __len__(self):
 		return len(self.df_cut_sites)
@@ -90,6 +95,21 @@ class StandardCuts:
 
 		self.df_cut_sites['cut_cluster'] = self.df_cut_sites.groupby(['chromosome', 'strand', 'cut_cluster']).ngroup()
 
+
+	def cut_cluster_representation(self):
+		# List of (attribute name, grouping key) pairs
+		groupings = [
+			('method_counts', 'method'),
+			('id_counts', 'id'),
+		]
+
+		for attr_name, group_key in groupings:
+			df = self.sample_sheet[['sample', 'method', 'id']].copy()
+			df = df.merge(self.df_cut_sites[['cut_cluster', 'id']].drop_duplicates(), on='id')
+
+			df_wide = df_long_to_wide(df, to_rows=group_key, to_columns='cut_cluster')
+			setattr(self, attr_name, df_wide)
+			
 	
 	def cluster_cut_sites(self, range_threshold = 20):
 
@@ -474,6 +494,7 @@ class CutSite:
 			self.profile[feature] = self.alignment[feature]
 
 		self.profile['cut_region_sequence'] = self.cut_region['sequence']
+
 		
 
 	# def score_cut(self):

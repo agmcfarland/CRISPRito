@@ -261,6 +261,20 @@ def standard_group_1_ptprc_cut_sites(load_1_group_samplesheet_ptprc, project_tes
 	return standard_group
 
 
+def test_cut_cluster_representation(standard_group_1_ptprc_cut_sites):
+	"""
+	pytest -sv tests/unit/test_StandardCuts.py::test_cut_cluster_representation
+	"""
+	standard_group = standard_group_1_ptprc_cut_sites
+
+	standard_group.cut_cluster_representation()
+
+	assert standard_group.method_counts.shape == (3,16)
+	assert ['crisprme', 'crista', 'iguide'] == standard_group.method_counts['method'].tolist()
+	assert ['crisprme', 'crista', 'iguide'] != standard_group.id_counts['id'].tolist()
+	assert standard_group.id_counts.shape == (3,16)
+
+
 def test_cut_site_alignment(standard_group_1_ptprc_cut_sites):
 	"""
 	pytest -sv tests/unit/test_StandardCuts.py::test_cut_site_alignment
@@ -560,7 +574,7 @@ def test_profiles_to_df(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
 
 
 # def test_multiprocessing_identify_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
-# 	"""
+# 	"""s
 # 	pytest -sv tests/unit/test_StandardCuts.py::test_multiprocessing_extract_in_refseq_feature
 # 	"""
 

@@ -182,6 +182,24 @@ def find_revised_pam(sequence, protospacer_start, search_direction = 'forward', 
 	'pam_found': revised_pam[1:] == pam_type[1:]
 	}
 
+def df_long_to_wide(df, to_rows, to_columns, column_prefix = None):
+	"""
+	"""
+	df_wide = (
+		df
+		.groupby([to_rows, to_columns])
+		.size()  
+		.unstack(fill_value=0)  
+		.reset_index()
+		)
+	df_wide.index.name = 'index'
+
+	if column_prefix:
+
+		df_wide = df_wide.rename(
+			columns={col: f"{column_prefix}_{col}" for e, col in enumerate(df_wide.columns) if e != 0})
+
+	return df_wide
 
 # # def extract_annotations(df, position):
 # # 	return df[(df['start'] <= position) & (df['end'] >= position)]
