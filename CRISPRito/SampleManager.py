@@ -8,18 +8,18 @@ class SampleManager:
 		'one_scaled',
 		'abundance'
 	]
-	def __init__(self, input_file, output_dir="CRISPRito_output"):
+	def __init__(self, sample_sheet_path, output_dir="CRISPRito_output"):
 		"""
 		Initializes the SampleManager with an input file path.
 		
-		:param input_file: Path to the sample sheet containing sample data.
+		:param sample_sheet: Path to the sample sheet containing sample data.
 		"""
-		self.input_file = input_file
+		self.sample_sheet_path = sample_sheet_path
 		self.output_dir = output_dir
 		self.table = None
 
 	def load_samplesheet(self):
-		self.table = pd.read_csv(self.input_file)
+		self.table = pd.read_csv(self.sample_sheet_path)
 
 	def assign_unique_id(self):
 		"""Reads the input file into a pandas DataFrame and assigns unique IDs."""

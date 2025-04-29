@@ -7,11 +7,13 @@ import pandas as pd
 
 real_read_csv = pd.read_csv
 
+@mock.patch('CRISPRito.SampleManager.pd.core.frame.DataFrame.to_csv')
 @mock.patch('CRISPRito.SetupRun.RunParameters.manage_output_dir')
 @mock.patch('CRISPRito.SampleManager.pd.read_csv')
 def test_setup_run(
 	mock_read_csv,
 	mock_manage_dir,
+	mock_to_csv,
 	project_test_data_directory,
 	path_to_hg38_genome,
 	path_to_hg38_refseq,
@@ -23,14 +25,19 @@ def test_setup_run(
 
 	mock_read_csv.return_value = real_read_csv(pjoin(project_test_data_directory, 'input_samplesheet_ptprc_reduced.csv'))
 
-	# Act
 	setup_run(
-		input_file = 'dummy_input.csv',
+		sample_sheet_path = pjoin(project_test_data_directory, 'input_samplesheet_ptprc_reduced.csv'),
 		output_dir = 'dummy_output',
-		
+		genome_path = path_to_hg38_genome,
+		feature_path = path_to_hg38_refseq,
+		gene_names_path = path_to_hg38_gene_names,
 		overwrite_output_dir = True)
 
-	# Assert
 	mock_manage_dir.assert_called_once()
 
+	# mock_to_csv.
+
+	print(mock_to_csv.call_args_list)
+
+	assert mock_to_csv.call_count == 2
 

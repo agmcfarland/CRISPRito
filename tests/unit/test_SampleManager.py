@@ -12,7 +12,7 @@ import pandas as pd
 @pytest.fixture
 def load_default_sample_manager_test_input(project_test_data_directory):
 	samples = SampleManager(
-		input_file = pjoin(project_test_data_directory, 'input_samplesheet_ptprc_reduced.csv')
+		sample_sheet_path = pjoin(project_test_data_directory, 'input_samplesheet_ptprc_reduced.csv')
 		)
 	samples.load_samplesheet()
 

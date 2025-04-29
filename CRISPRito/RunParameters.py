@@ -25,11 +25,11 @@ class RunParameters:
 
 	def check_inputs_exist(
 		self,
-		sample_sheet,
+		sample_sheet_path,
 		genome_path,
 		feature_path,
 		gene_names_path
 		):
-		for i in [sample_sheet, genome_path, feature_path, gene_names_path]:
+		for i in [sample_sheet_path, genome_path, feature_path, gene_names_path]:
 			if not os.path.exists(i):
 				raise ValueError(f'{i} does not exist')
