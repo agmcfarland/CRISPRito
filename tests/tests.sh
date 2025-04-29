@@ -2,7 +2,13 @@ conda activate CRISPRito
 
 cd /data/CRISPRito
 
-python -m pytest -sv tests
+python -m pytest --disable-warnings -sv tests
+
+python -m pytest -sv tests/unit/test_misc.py
+
+python -m pytest --disable-warnings -sv tests/unit/test_RunParameters.py
+
+python -m pytest -sv tests/unit/test_ProcessGroup.py
 
 python -m pytest -sv tests/unit/test_StandardCuts.py
 

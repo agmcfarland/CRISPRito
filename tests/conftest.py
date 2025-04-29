@@ -47,6 +47,9 @@ def sample_fasta_gz(scope = 'session', autouse = True):
             f.write(fasta_content)
         return tmp_fasta.name  # Return the file path
 
+@pytest.fixture
+def path_to_hg38_gene_names(scope = 'session', autouse = True):
+	return '/data/GenomicTrackRepository/data/external/hg38/gene_names.csv'
 
 @pytest.fixture
 def example_hg38_genome_size(scope = 'session', autouse = True):

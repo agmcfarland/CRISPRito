@@ -33,6 +33,8 @@ class StandardCuts:
 		self.sample_sheet = sample_sheet
 		self.flank_size = flank_size
 
+		self.cluster_group = self.sample_sheet.cluster_group.unique().item()
+
 		# alignments processed in order of self.sgRNA 
 		self.sgRNA = {
 			'fwd_NGG' : DNA(sgRNA + PAM_alignment),
@@ -107,7 +109,7 @@ class StandardCuts:
 			df = self.sample_sheet[['sample', 'method', 'id']].copy()
 			df = df.merge(self.df_cut_sites[['cut_cluster', 'id']].drop_duplicates(), on='id')
 
-			df_wide = df_long_to_wide(df, to_rows=group_key, to_columns='cut_cluster')
+			df_wide = df_long_to_wide(df, to_rows=group_key, to_columns='cut_cluster', column_prefix = 'cut_')
 			setattr(self, attr_name, df_wide)
 			
 	
