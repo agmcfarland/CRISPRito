@@ -4,9 +4,9 @@ cd /data/CRISPRito
 
 python -m pytest --disable-warnings -sv tests
 
-python -m pytest -sv tests/unit/test_misc.py
+/home/ubuntu/miniconda3/envs/CRISPRito/bin/python -m pytest -sv tests/unit/test_misc.py
 
-python -m pytest --disable-warnings -sv tests/unit/test_RunParameters.py
+python -m pytest --disable-warnings -sv /data/CRISPRito/tests/unit/test_RunParameters.py
 
 python -m pytest -sv tests/unit/test_ProcessGroup.py
 
@@ -41,3 +41,17 @@ pytest -sv tests/unit/test_standard_cut_alignments.py::test_alignment5
 pytest -sv tests/unit/test_standard_cut_alignments.py::test_alignment6
 
 pytest --disable-warnings -sv tests/unit/test_standard_cut_alignments.py::test_alignment7
+
+
+setup_run -h
+
+
+nextflow run main.nf \
+  --sample_sheet /data/CRISPRito/tests/data/input_samplesheet_ptprc_reduced.csv \
+  --genome /data/CRISPRito/tests/temp/new \
+  --features /data/GenomicTrackRepository/data/processed/hg38/hg38.fasta.gz \
+  --genes /data/GenomicTrackRepository/data/processed/hg38/ncbiRefSeqCurated_expanded.csv \
+  --output_dir /data/GenomicTrackRepository/data/external/hg38/gene_names.csv \
+  --overwrite_output_dir
+
+

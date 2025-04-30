@@ -1,9 +1,10 @@
+import argparse
 import os
 from os.path import join as pjoin
 import pandas as pd
 from CRISPRito.StandardCuts import StandardCuts
 
-def process_samples(
+def process_group(
 	group_samplesheet_path,
 	output_path,
 	genome_path, 
@@ -61,17 +62,17 @@ def process_samples(
 	standard_group.id_counts.to_csv(pjoin(output_path, f'{standard_group.cluster_group}_group_id_counts.csv'), index = None)
 	
 	print(standard_group.method_counts)
-	
+
 	print(standard_group.id_counts)
 
 	print(standard_group.df_cut_profiles)
 
-if __name__ == '__main__':
-	import argparse
+
+def main():
 
 	parser = argparse.ArgumentParser(description="Process CRISPRito sample group.")
 
-	parser.add_argument("samplesheet", help="Path to the sample sheet CSV.")
+	parser.add_argument("--group_samplesheet_path", help="Path to the sample sheet CSV.")
 	parser.add_argument("--output_dir", default="CRISPRito_output", help="Directory to save output CSV.")
 	parser.add_argument("--genome_path", required=True, help="Path to the gzipped genome FASTA")
 	parser.add_argument("--feature_path", required=True, help="Path to the features CSV file.")
@@ -82,9 +83,9 @@ if __name__ == '__main__':
 
 	args = parser.parse_args()
 
-	process_samples(
-		group_samplesheet_path=args.samplesheet,
-		output_path=args.output_dir,
+	process_group(
+		group_samplesheet_path=args.group_samplesheet_path,
+		output_dir=args.output_dir,
 		genome_path=args.genome_path,
 		feature_path=args.feature_path,
 		gene_names_path=args.gene_names_path,
@@ -92,4 +93,8 @@ if __name__ == '__main__':
 		sgRNA=args.sgRNA,
 		PAM_alignment=args.PAM_alignment
 	)
+
+
+if __name__ == '__main__':
+	main()
 

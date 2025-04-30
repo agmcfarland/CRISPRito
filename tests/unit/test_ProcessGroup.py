@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 from unittest import mock
 from os.path import join as pjoin
-from CRISPRito.ProcessGroup import process_samples
+from CRISPRito.ProcessGroup import process_group
 
 @pytest.fixture
 def load_1_group_samplesheet_ptprc(project_test_data_directory):
@@ -26,7 +26,7 @@ def side_effect_read_csv_factory(preloaded_df):
 
 @mock.patch('CRISPRito.ProcessGroup.pd.core.frame.DataFrame.to_csv')
 @mock.patch('CRISPRito.ProcessGroup.pd.read_csv')
-def test_process_samples_1(
+def test_process_group_1(
 	mock_read_csv,
 	mock_to_csv,
 	project_test_data_directory,
@@ -36,13 +36,13 @@ def test_process_samples_1(
 	path_to_hg38_gene_names):
 
 	"""
-	pytest -sv tests/unit/test_ProcessGroup.py::test_process_samples_1
+	pytest -sv tests/unit/test_ProcessGroup.py::test_process_group_1
 	"""
 	output_dir = '/fake/path'
 	input_samplesheet_path = "group1_fake_samplesheet.csv"
 	mock_read_csv.side_effect = side_effect_read_csv_factory(load_1_group_samplesheet_ptprc)
 
-	process_samples(
+	process_group(
 		group_samplesheet_path=input_samplesheet_path,
 		output_path=output_dir,
 		genome_path= path_to_hg38_genome,

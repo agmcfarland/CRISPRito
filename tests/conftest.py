@@ -5,6 +5,10 @@ import tempfile
 import pytest
 import os
 import pathlib
+import sys
+
+
+# sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 @pytest.fixture
 def project_test_data_directory(scope="session", autouse=True):
