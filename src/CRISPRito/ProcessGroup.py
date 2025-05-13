@@ -18,7 +18,7 @@ def process_group(
 	# Update this
 	PAM_alignment = PAM_alignment.replace('N', '-')
 
-	# Update this
+	# Update thisExtracting cut regions:
 	allowed_chromosome = [f'chr{i}' for i in range(1,22)]
 	allowed_chromosome.append('chrY')
 	allowed_chromosome.append('chrX')
@@ -58,6 +58,8 @@ def process_group(
 
 	standard_group.cut_profiles_to_df()
 
+	standard_group.cut_detail_to_df()
+
 	standard_group.df_cut_profiles = standard_group.df_cut_profiles.sort_values(['local_rank_median', 'zscore_mean'], ascending=[True, False])
 
 	standard_group.df_cut_profiles.to_csv(pjoin(output_path, f'{standard_group.cluster_group}_group_cut_profiles.csv'), index = None)
@@ -65,7 +67,11 @@ def process_group(
 	standard_group.method_counts.to_csv(pjoin(output_path, f'{standard_group.cluster_group}_group_method_counts.csv'), index = None)
 
 	standard_group.id_counts.to_csv(pjoin(output_path, f'{standard_group.cluster_group}_group_id_counts.csv'), index = None)
-	
+
+	standard_group.df_cut_detail.to_csv(pjoin(output_path, f'{standard_group.cluster_group}_group_id_cut_detail.csv'), index = None)
+
+	# Update this
+
 	print(standard_group.method_counts)
 
 	print(standard_group.id_counts)

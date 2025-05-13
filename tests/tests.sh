@@ -52,10 +52,11 @@ process_group -h
 
 nextflow run main.nf \
   --sample_sheet /data/CRISPRito/tests/data/input_samplesheet_ptprc_reduced.csv \
-  --genome /data/CRISPRito/tests/temp/new \
-  --features /data/GenomicTrackRepository/data/processed/hg38/hg38.fasta.gz \
-  --genes /data/GenomicTrackRepository/data/processed/hg38/ncbiRefSeqCurated_expanded.csv \
-  --output_dir /data/GenomicTrackRepository/data/external/hg38/gene_names.csv \
-  --overwrite_output_dir
+  --genome /data/GenomicTrackRepository/data/processed/hg38/hg38.fasta.gz \
+  --features /data/GenomicTrackRepository/data/processed/hg38/ncbiRefSeqCurated_expanded.csv \
+  --genes /data/GenomicTrackRepository/data/external/hg38/gene_names.csv \
+  --output_dir /data/CRISPRito/tests/temp/new \
+  --sgRNA AAAATATGCAAACATCACTG \
+  --overwrite_output_dir 
 
 

@@ -253,6 +253,24 @@ class StandardCuts:
 
 			self.cut_sites.append(standard_cut)
 
+	@report_time
+	def cut_detail_to_df(self):
+		cut_detail = []
+		for standard_cut in self.cut_sites:
+			# print('\n')
+			# print(standard_cut.detail)
+			# print(standard_cut.detail.shape)
+
+			# print(type(standard_cut.detail))
+			# if standard_cut.detail.shape == (1,10):
+			cut_detail.append(standard_cut.detail)
+
+		self.df_cut_detail = pd.concat(cut_detail)
+
+		# print(cut_detail)
+
+		# self.df_cut_detail = pd.DataFrame(cut_detail)
+
 	# @report_time
 	# def multithread_build_cut_site_annotation(self, gr_genomic_features, max_workers=None):
 	# 	if max_workers is None:

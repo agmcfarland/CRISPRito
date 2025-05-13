@@ -572,6 +572,40 @@ def test_profiles_to_df(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
 	print(time.time()-start)
 	# check_cut_site_correct(standard_group, expected_results)
 
+def test_cut_detail_to_df(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
+	"""
+	pytest -sv tests/unit/test_StandardCuts.py::test_cut_detail_to_df
+	"""
+
+	standard_group = standard_group_1_ptprc_cut_sites
+
+	all_genomic_features = pd.read_csv(path_to_hg38_refseq)
+
+	df_feature = all_genomic_features.copy()
+
+	df_gene_names = df_feature.drop(columns = 'feature').groupby('name').agg({
+		'chrom': 'first',
+		'start': 'min',
+		'end': 'max',
+		'name2': 'first'
+		}).rename(
+	columns = {'name2': 'gene', 'goo':'ga'})
+
+	print('\n')
+
+	print('Multithreaded')
+	standard_group = standard_group_1_ptprc_cut_sites
+	standard_group.parallel_build_cut_site_alignment()
+	start = time.time()
+	# standard_group.assign_features(all_features = all_genomic_features, gene_names = df_gene_names)
+	# standard_group.build_cut_profile()
+	# standard_group.cut_profiles_to_df()
+	standard_group.cut_detail_to_df()
+	# print(standard_group.df_cut_profiles)
+	# print(standard_group.df_cut_detail.shape)
+	assert standard_group.df_cut_detail.shape == (19, 10)
+	print(time.time()-start)
+	# check_cut_site_correct(standard_group, expected_results)
 
 # def test_multiprocessing_identify_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
 # 	"""s
