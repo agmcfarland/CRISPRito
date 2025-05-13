@@ -34,7 +34,7 @@ def setup_run(
 
 	manager.set_up()
 
-	print(os.listdir(output_dir))
+	# print(os.listdir(output_dir))
 
 def main():
 	parser = argparse.ArgumentParser(description="Set up a CRISPRito run.")
@@ -48,7 +48,7 @@ def main():
 
 	args = parser.parse_args()
 
-	print(args)
+	# print(args)
 
 	setup_run(
 		sample_sheet_path=args.sample_sheet_path,
@@ -58,7 +58,6 @@ def main():
 		gene_names_path=args.gene_names_path,
 		overwrite_output_dir=args.overwrite_output_dir
 	)
-
 
 
 if __name__ == '__main__':

@@ -109,7 +109,7 @@ class StandardCuts:
 			df = self.sample_sheet[['sample', 'method', 'id']].copy()
 			df = df.merge(self.df_cut_sites[['cut_cluster', 'id']].drop_duplicates(), on='id')
 
-			df_wide = df_long_to_wide(df, to_rows=group_key, to_columns='cut_cluster', column_prefix = 'cut_')
+			df_wide = df_long_to_wide(df, to_rows=group_key, to_columns='cut_cluster', column_prefix = 'cut')
 			setattr(self, attr_name, df_wide)
 			
 	
@@ -369,7 +369,7 @@ class CutSite:
 
 			self.alignment['PAM_gaps'] = 0
 
-			if self.alignment['PAM'][1:] != 'GG':
+			if self.alignment['PAM'][1:] != 'GG': # hardcoded for NGG pams
 
 				pam_search_results = find_revised_pam(
 					sequence = str(self.alignment['alignment'][0][1]),

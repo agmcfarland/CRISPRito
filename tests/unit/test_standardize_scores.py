@@ -1,4 +1,4 @@
-from Utils import scale_min_max, scale_zscore
+from CRISPRito.Utils import scale_min_max, scale_zscore
 import pytest
 import numpy as np
 

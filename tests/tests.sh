@@ -26,6 +26,8 @@ pytest -sv tests/unit/test_StandardCuts.py::test_multiprocessing_cut_site_alignm
 
 pytest -sv tests/unit/test_StandardCuts.py::test_extract_in_refseq_feature
 
+pytest -sv tests/unit/test_standardize_scores.py
+
 
 # pytest -sv tests/unit/test_standard_cut_alignments.py::test_alignment6
 
@@ -44,6 +46,8 @@ pytest --disable-warnings -sv tests/unit/test_standard_cut_alignments.py::test_a
 
 
 setup_run -h
+
+process_group -h
 
 
 nextflow run main.nf \

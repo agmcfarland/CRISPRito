@@ -10,8 +10,13 @@ def process_group(
 	genome_path, 
 	feature_path,
 	gene_names_path,
-	flank_size:int = 30, sgRNA:str = '', PAM_alignment:str = '-GG'
+	flank_size:int = 30, 
+	sgRNA:str = '', 
+	PAM_alignment:str = 'NGG'
 	):
+
+	# Update this
+	PAM_alignment = PAM_alignment.replace('N', '-')
 
 	# Update this
 	allowed_chromosome = [f'chr{i}' for i in range(1,22)]
@@ -19,12 +24,12 @@ def process_group(
 	allowed_chromosome.append('chrX')
 
 	# Update this variable name
-	dfz = pd.read_csv(group_samplesheet_path) #'/data/CRISPRito/tests/temp/1_group_samplesheet.csv')
+	dfz = pd.read_csv(group_samplesheet_path) #'/data/CRISPRito/tests/temp/new/1_group_samplesheet.csv')
+	# dfz = pd.read_csv('/data/CRISPRito/tests/temp/new/1_group_samplesheet.csv') #'/data/CRISPRito/tests/temp/new/1_group_samplesheet.csv')
 
 	standard_group = StandardCuts(sample_sheet = dfz, flank_size = flank_size, sgRNA = sgRNA, PAM_alignment = PAM_alignment)	
 
 	standard_group.load_cut_sites()
-
 	# Update this
 	standard_group.df_cut_sites = standard_group.df_cut_sites[standard_group.df_cut_sites['chromosome'].isin(allowed_chromosome)]
 
