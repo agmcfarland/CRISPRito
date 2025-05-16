@@ -62,6 +62,8 @@ class StandardCuts:
 		
 		self.id_counts = pd.DataFrame()
 
+		self.df_cut_detail = pd.DataFrame()
+
 	def __repr__(self):
 		return f'StandardCuts\nSample Sheet:\n{self.sample_sheet}\nCut Sites\n{self.df_cut_sites}'
 
@@ -150,7 +152,7 @@ class StandardCuts:
 
 		self.df_cut_sites = (self.df_cut_sites.sort_values(['id', 'score'], ascending=[True, False]).assign(local_rank=lambda x: x.groupby('id').cumcount() + 1))
 
-
+	@report_time
 	def load_genome(self, genome_path):
 		if not os.path.exists(genome_path):
 			raise FileNotFoundError(f"Genome file not found: {genome_path}")
@@ -257,35 +259,9 @@ class StandardCuts:
 	def cut_detail_to_df(self):
 		cut_detail = []
 		for standard_cut in self.cut_sites:
-			# print('\n')
-			# print(standard_cut.detail)
-			# print(standard_cut.detail.shape)
-
-			# print(type(standard_cut.detail))
-			# if standard_cut.detail.shape == (1,10):
 			cut_detail.append(standard_cut.detail)
 
 		self.df_cut_detail = pd.concat(cut_detail)
-
-		# print(cut_detail)
-
-		# self.df_cut_detail = pd.DataFrame(cut_detail)
-
-	# @report_time
-	# def multithread_build_cut_site_annotation(self, gr_genomic_features, max_workers=None):
-	# 	if max_workers is None:
-	# 		max_workers = multiprocessing.cpu_count()
-
-	# 	df_features = gr_genomic_features.df.copy()
-
-	# 	with ThreadPoolExecutor(max_workers=max_workers) as executor:
-	# 		futures = executor.map(
-	# 			build_cut_site_annotation_worker,
-	# 			self.cut_sites,
-	# 			repeat(df_features)
-	# 		)
-	# 		self.cut_sites = list(tqdm(futures, total=len(self.cut_sites), desc="Annotating"))
-
 
 	@report_time
 	def parallel_build_cut_site_alignment(self, max_workers=None):
@@ -321,18 +297,21 @@ def build_cut_site_alignment_worker(cut_site):
 
 class CutSite:
 
-	def __init__(self, chromosome, strand, ref_position, cut_region, sgRNA, sgRNA_alignment_tolerance, sgRNA_alignment_start_offset, cut_distance, detail, flank_size):
+	def __init__(self, chromosome, strand, ref_position, sgRNA, sgRNA_alignment_tolerance, sgRNA_alignment_start_offset, cut_distance, detail, flank_size, cut_region = {}):
 		self.chromosome = chromosome
 		self.strand = strand
 		self.ref_position = ref_position
-		self.cut_region = {}
-		self.cut_region['start'], self.cut_region['stop'] = sequence_slice_locations(pos = ref_position, flank_size = flank_size)
-		
-		if self.strand == '-':
-			self.cut_region['sequence'] = str(Seq(cut_region).reverse_complement())
-		
-		else:
-			self.cut_region['sequence'] = cut_region
+
+		if cut_region != {}:
+			
+			self.cut_region = {}
+			self.cut_region['start'], self.cut_region['stop'] = sequence_slice_locations(pos = ref_position, flank_size = flank_size)
+			
+			if self.strand == '-':
+				self.cut_region['sequence'] = str(Seq(cut_region).reverse_complement())
+			
+			else:
+				self.cut_region['sequence'] = cut_region
 
 		self.sgRNA = sgRNA
 		self.sgRNA_alignment_tolerance = sgRNA_alignment_tolerance
@@ -507,7 +486,6 @@ class CutSite:
 		# local position
 		for feature in ['local_start', 'local_stop']:
 			self.profile[feature] = self.alignment[feature]
-
 
 		# alignment
 		for feature in ['aligned_sequence', 'aligned_gRNA', 'alignment_length', 'PAM', 'PAM_gaps']:
