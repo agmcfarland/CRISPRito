@@ -7,8 +7,8 @@ def setup_run(
 	sample_sheet_path,
 	output_dir,
 	genome_path,
-	feature_path,
-	gene_names_path,
+	feature_path = None,
+	gene_names_path = None,
 	overwrite_output_dir):
 	"""
 	"""

@@ -12,8 +12,23 @@ def process_group(
 	gene_names_path,
 	flank_size:int = 30, 
 	sgRNA:str = '', 
-	PAM_alignment:str = 'NGG'
+	PAM_alignment:str = 'NGG',
+	range_threshold = 20
 	):
+	# troubleshooting inputs start
+	# group_samplesheet_path = '/data/friederike_herbst_nowrouzi_project/projects/base_editor_ptprc_project/data/processed/1-crisprito_analysis/0-make_standard_inputs/iguide_bfx_rhamp/1_group_samplesheet.csv'
+	# output_path = None
+	# genome_path = '/data/GenomicTrackRepository/data/processed/hg38/hg38.fasta.gz'
+	# feature_path = '/data/GenomicTrackRepository/data/processed/hg38/ncbiRefSeqCurated_expanded.csv'
+	# gene_names_path = '/data/GenomicTrackRepository/data/external/hg38/gene_names.csv'
+	# flank_size = 30
+	# sgRNA = 'AAAATATGCAAACATCACTG'
+	# PAM_alignment:str = 'NGG'
+
+	# standard_group.df_cut_sites[standard_group.df_cut_sites['position'] == 28359447]
+	# 3050	chr21	-	5525780	0	0	1	1	LOC102724159
+
+	# troubleshooting inputs end
 
 	# Update this
 	PAM_alignment = PAM_alignment.replace('N', '-')
@@ -24,16 +39,15 @@ def process_group(
 	allowed_chromosome.append('chrX')
 
 	# Update this variable name
-	dfz = pd.read_csv(group_samplesheet_path) #'/data/CRISPRito/tests/temp/new/1_group_samplesheet.csv')
-	# dfz = pd.read_csv('/data/CRISPRito/tests/temp/new/1_group_samplesheet.csv') #'/data/CRISPRito/tests/temp/new/1_group_samplesheet.csv')
+	df_group_samplesheet = pd.read_csv(group_samplesheet_path) #'/data/CRISPRito/tests/temp/new/1_group_samplesheet.csv')
 
-	standard_group = StandardCuts(sample_sheet = dfz, flank_size = flank_size, sgRNA = sgRNA, PAM_alignment = PAM_alignment)	
+	standard_group = StandardCuts(sample_sheet = df_group_samplesheet, flank_size = flank_size, sgRNA = sgRNA, PAM_alignment = PAM_alignment)	
 
 	standard_group.load_cut_sites()
 	# Update this
 	standard_group.df_cut_sites = standard_group.df_cut_sites[standard_group.df_cut_sites['chromosome'].isin(allowed_chromosome)]
 
-	standard_group.cluster_cut_sites()
+	standard_group.cluster_cut_sites(range_threshold = range_threshold)
 
 	standard_group.update_cut_cluster_id()
 
@@ -91,6 +105,7 @@ def main():
 	parser.add_argument("--flank_size", type=int, default=30, help="Flank size around cut sites.")
 	parser.add_argument("--sgRNA", type=str, default="", help="sgRNA sequence (optional).")
 	parser.add_argument("--PAM_alignment", type=str, default="-GG", help="PAM sequence for alignment.")
+	parser.add_argument("--range_threshold", type=int, default=20, help="Distance between clusters")
 
 	args = parser.parse_args()
 
@@ -102,7 +117,8 @@ def main():
 		gene_names_path=args.gene_names_path,
 		flank_size=args.flank_size,
 		sgRNA=args.sgRNA,
-		PAM_alignment=args.PAM_alignment
+		PAM_alignment=args.PAM_alignment,
+		range_threshold=args.range_threshold
 	)
 
 

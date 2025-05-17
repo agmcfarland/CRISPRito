@@ -31,5 +31,6 @@ class RunParameters:
 		gene_names_path
 		):
 		for i in [sample_sheet_path, genome_path, feature_path, gene_names_path]:
-			if not os.path.exists(i):
-				raise ValueError(f'{i} does not exist')
+			if i !=  None:
+				if not os.path.exists(i):
+					raise ValueError(f'{i} does not exist')

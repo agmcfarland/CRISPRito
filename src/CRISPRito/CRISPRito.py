@@ -11,13 +11,15 @@ def main():
 	parser = argparse.ArgumentParser(description="Run full CRISPRito cut \nstandardization and annotation\n pipline")
 	parser.add_argument("--sample_sheet_path", required=True)
 	parser.add_argument("--output_dir", required=True)
-	parser.add_argument("--genome_path", required=True)
-	parser.add_argument("--feature_path", required=True)
-	parser.add_argument("--gene_names_path", required=True)
+	parser.add_argument("--genome_path", required=True, default = None)
+	parser.add_argument("--feature_path", required=False, default = None)
+	parser.add_argument("--gene_names_path", required=False, default = None)
 	parser.add_argument("--overwrite_output_dir", action="store_true")
 	parser.add_argument("--flank_size", type=int, default=30)
 	parser.add_argument("--sgRNA", required=True)
 	parser.add_argument("--PAM_alignment", default='-GG', required=True)
+	parser.add_argument("--range_threshold", type=int, default=20, help="Distance between clusters")
+	parser.add_argument("--workflow", type = str, help = 'One of [cluster_cuts, detect_cut]')
 
 	args = parser.parse_args()
 
@@ -40,16 +42,32 @@ def main():
 	# 	raise RuntimeError("No *_group_samplesheet.csv files found after setup.")
 
 	for group_file in group_files:
-		process_group(
-			group_samplesheet_path=group_file,
-			output_path=args.output_dir,
-			genome_path=args.genome_path,
-			feature_path=args.feature_path,
-			gene_names_path=args.gene_names_path,
-			flank_size=args.flank_size,
-			sgRNA=args.sgRNA,
-			PAM_alignment=args.PAM_alignment
-		)
+
+		if args.workflow == 'detect_cut':
+			range_to_site(
+				group_samplesheet_path=group_file,
+				output_path=args.output_dir,
+				genome_path=args.genome_path,
+				feature_path=args.feature_path,
+				gene_names_path=args.gene_names_path,
+				flank_size=args.flank_size,
+				sgRNA=args.sgRNA,
+				PAM_alignment=args.PAM_alignment,
+				range_threshold = args.range_threshold
+				)
+
+		if args.workflow == 'cluster_cuts':
+			process_group(
+				group_samplesheet_path=group_file,
+				output_path=args.output_dir,
+				genome_path=args.genome_path,
+				feature_path=args.feature_path,
+				gene_names_path=args.gene_names_path,
+				flank_size=args.flank_size,
+				sgRNA=args.sgRNA,
+				PAM_alignment=args.PAM_alignment,
+				range_threshold = args.range_threshold
+			)
 
 	print(f'Output\n{args.output_dir}')
 

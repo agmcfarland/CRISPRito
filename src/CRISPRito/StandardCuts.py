@@ -29,7 +29,7 @@ from CRISPRito.Utils import (
 
 class StandardCuts:
 
-	def __init__(self, sample_sheet:pd.DataFrame, flank_size:int = 30, sgRNA:str = '', PAM_alignment:str = '-GG'):
+	def __init__(self, sample_sheet:pd.DataFrame, flank_size:int = 30, sgRNA:str = '', PAM_alignment:str = '-GG', cut_distance = 3):
 		self.sample_sheet = sample_sheet
 		self.flank_size = flank_size
 
@@ -50,7 +50,7 @@ class StandardCuts:
 			'fwd' : 0,
 			'fwd_NGG' : len(PAM_alignment)
 		}
-		self.cut_distance = 3
+		self.cut_distance = cut_distance
 
 		self.df_cut_sites = pd.DataFrame()
 
