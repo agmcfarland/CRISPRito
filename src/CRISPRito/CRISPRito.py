@@ -3,12 +3,14 @@ import os
 from os.path import join as pjoin
 import pandas as pd
 from glob import glob
+from CRISPRito.Utils import report_time
 from CRISPRito.ProcessGroup import process_group
+from CRISPRito.RangeToSite import range_to_site
 from CRISPRito.SetupRun import setup_run
 
-
+@report_time
 def main():
-	parser = argparse.ArgumentParser(description="Run full CRISPRito cut \nstandardization and annotation\n pipline")
+	parser = argparse.ArgumentParser(description="Run CRISPRito worfklows")
 	parser.add_argument("--sample_sheet_path", required=True)
 	parser.add_argument("--output_dir", required=True)
 	parser.add_argument("--genome_path", required=True, default = None)

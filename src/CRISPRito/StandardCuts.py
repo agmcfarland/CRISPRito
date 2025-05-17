@@ -256,9 +256,15 @@ class StandardCuts:
 			self.cut_sites.append(standard_cut)
 
 	@report_time
-	def cut_detail_to_df(self):
+	def cut_detail_to_df(self, include_cut_location = False):
+		"""
+		include_cut_location adds self.cut_site from the CutSite object to self.detail
+		"""
 		cut_detail = []
 		for standard_cut in self.cut_sites:
+			if not include_cut_location:
+				standard_cut.detail['cut'] = standard_cut.cut_site
+
 			cut_detail.append(standard_cut.detail)
 
 		self.df_cut_detail = pd.concat(cut_detail)
