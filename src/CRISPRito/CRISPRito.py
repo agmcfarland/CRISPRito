@@ -50,8 +50,6 @@ def main():
 				group_samplesheet_path=group_file,
 				output_path=args.output_dir,
 				genome_path=args.genome_path,
-				feature_path=args.feature_path,
-				gene_names_path=args.gene_names_path,
 				flank_size=args.flank_size,
 				sgRNA=args.sgRNA,
 				PAM_alignment=args.PAM_alignment,

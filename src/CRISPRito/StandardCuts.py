@@ -224,6 +224,12 @@ class StandardCuts:
 		for standard_cut in self.cut_sites:
 			standard_cut.build_cut_profile()
 
+
+	@report_time
+	def build_simple_cut_profile(self):
+		for standard_cut in self.cut_sites:
+			standard_cut.build_simple_cut_profile()
+
 	@report_time
 	def cut_profiles_to_df(self):
 		cut_profiles = []
@@ -447,6 +453,30 @@ class CutSite:
 		self.features['nearest_gene'] = df.gene.item()
 
 		self.features['nearest_gene_distance'] = df.Distance.item()
+
+
+	def build_simple_cut_profile(self):
+		self.profile = {
+			'cut_cluster': self.cut_cluster,
+			'chromosome': self.chromosome,
+			'strand': self.strand,
+			'cut': 0,
+			'overlap': len(self.detail)
+			}
+
+		# global position
+		for feature in ['cut', 'protospacer_start', 'protospacer_stop']:
+			self.profile[feature] = self.global_position[feature]
+
+		# local position
+		for feature in ['local_start', 'local_stop']:
+			self.profile[feature] = self.alignment[feature]
+
+		# alignment
+		for feature in ['aligned_sequence', 'aligned_gRNA', 'alignment_length', 'PAM', 'PAM_gaps']:
+			self.profile[feature] = self.alignment[feature]
+
+		self.profile['cut_region_sequence'] = self.cut_region['sequence']
 
 
 	def build_cut_profile(self):

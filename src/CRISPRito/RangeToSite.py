@@ -1,42 +1,11 @@
-from itertools import repeat
-import pandas as pd
+import argparse
 import os
 from os.path import join as pjoin
-from Bio.Seq import Seq
-from skbio import DNA
-from skbio.alignment import global_pairwise_align_nucleotide
-from concurrent.futures import ProcessPoolExecutor, as_completed
-import multiprocessing
-from tqdm import tqdm
-import pyranges as pr
-from CRISPRito.Utils import (
-	greedy_clustering_incremental,
-	retrieve_genome_slices_memoryview,
-	genome_to_dict_memoryview,
-	scale_zscore,
-	scale_min_max,
-	parse_global_alignment,
-	sequence_slice_locations,
-	central_tendency,
-	report_time,
-	convert_df_to_granges,
-	batch_overlaps,
-	batch_nearest_feature,
-	find_revised_pam,
-	df_long_to_wide
-	)
-import statistics
-from skbio import DNA
-from skbio.alignment import global_pairwise_align_nucleotide
-from CRISPRito.StandardCuts import CutSite, StandardCuts
-from CRISPRito.Utils import (
-	genome_to_dict_memoryview
-	)
-
+import pandas as pd
+from CRISPRito.StandardCuts import StandardCuts
 
 def range_to_site(
 	group_samplesheet_path,
-	output_filename,
 	output_path,
 	genome_path, 
 	flank_size:int = 30, 
@@ -44,6 +13,16 @@ def range_to_site(
 	PAM_alignment:str = 'NGG',
 	range_threshold = 1
 	):
+
+	# troubleshooting inputs start
+	# group_samplesheet_path = '/data/friederike_herbst_nowrouzi_project/projects/base_editor_ptprc_project/data/processed/1-crisprito_analysis/0-make_standard_inputs/CHOPCHOP_best_cut/1_group_samplesheet.csv'
+	# output_path = None
+	# genome_path = '/data/GenomicTrackRepository/data/processed/hg38/hg38.fasta.gz'
+	# flank_size = 30
+	# sgRNA = 'AAAATATGCAAACATCACTG'
+	# PAM_alignment:str = 'NGG'	
+	# range_threshold = 1
+	# troubleshooting inputs end
 
 	# Update this
 	PAM_alignment = PAM_alignment.replace('N', '-')
@@ -64,13 +43,13 @@ def range_to_site(
 
 		df_group_samplesheet = pd.read_csv(group_samplesheet_path) 
 
-		df_group_samplesheet['strand'] = strand_search[strand_]
-
 		standard_group = StandardCuts(sample_sheet = df_group_samplesheet, flank_size = flank_size, sgRNA = sgRNA, PAM_alignment = PAM_alignment)	
 
 		standard_group.load_cut_sites()
 		# Update this
 		standard_group.df_cut_sites = standard_group.df_cut_sites[standard_group.df_cut_sites['chromosome'].isin(allowed_chromosome)]
+
+		standard_group.df_cut_sites['strand'] = strand_search[strand_]
 
 		standard_group.cluster_cut_sites(range_threshold = range_threshold)
 
@@ -84,7 +63,13 @@ def range_to_site(
 
 		standard_group.parallel_build_cut_site_alignment()
 
-		standard_group.cut_detail_to_df(include_cut_location = True)
+		standard_group.build_simple_cut_profile()
+
+		standard_group.cut_profiles_to_df()
+
+		standard_group.cut_detail_to_df()
+
+		standard_group.df_cut_profiles.to_csv(pjoin(output_path, f'{standard_group.cluster_group}_group_cut_profiles_{strand_}.csv'), index = None)
 		
 		standard_group.df_cut_detail.to_csv(pjoin(output_path, f'{standard_group.cluster_group}_group_id_cut_detail_{strand_}.csv'), index = None)
 

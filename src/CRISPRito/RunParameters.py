@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 
 class RunParameters:
 	def __init__(self, output_dir):
@@ -18,7 +19,8 @@ class RunParameters:
 				print(f"Output directory '{self.output_dir}' exists. Overwriting...")
 				os.makedirs(self.output_dir)
 			else:
-				print(f"Output directory '{self.output_dir}' already exists. Keeping existing files.")
+				print(f"Output directory '{self.output_dir}' already exists. Stopping run.")
+				sys.exit()
 		else:
 			os.makedirs(self.output_dir)
 			print(f"Created output directory: {self.output_dir}")

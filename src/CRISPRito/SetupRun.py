@@ -9,7 +9,7 @@ def setup_run(
 	genome_path,
 	feature_path = None,
 	gene_names_path = None,
-	overwrite_output_dir):
+	overwrite_output_dir = False):
 	"""
 	"""
 	run_parameters = RunParameters(
