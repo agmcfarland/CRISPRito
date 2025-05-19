@@ -268,7 +268,7 @@ class StandardCuts:
 		"""
 		cut_detail = []
 		for standard_cut in self.cut_sites:
-			if not include_cut_location:
+			if include_cut_location:
 				standard_cut.detail['cut'] = standard_cut.cut_site
 
 			cut_detail.append(standard_cut.detail)
