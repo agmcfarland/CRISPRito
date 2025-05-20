@@ -328,7 +328,56 @@ def test_alignment7(sgRNA_info):
 
 
 
+def test_alignment8(sgRNA_info):
+	"""
+	pytest --disable-warnings -sv tests/unit/test_standard_cut_alignments.py::test_alignment8
+	This does not align unless a sliding window is used.
+	"""
+	print(sgRNA_info)
 
+	mock_detail = pd.DataFrame({'cut_cluster': [1822]})
+
+	with patch('CRISPRito.StandardCuts.sequence_slice_locations', return_value=(99760657-1, 99760736-1)):
+		mock_cutsite = CutSite(
+			chromosome='chr12',
+			strand='+',
+			ref_position=99760617,
+			# cut_region = 'AGAAATAAATAAAATAAAATAAAATCAGTGCAGAAGT',
+			cut_region= 'AAATCAGAAGAAAAGAAATAAATAAAATAAAATAAAATCAGTGCAGAAGTGAATGAAATTAAGACCCAAAAATTCATACA',
+			sgRNA=sgRNA_info[0],
+			sgRNA_alignment_tolerance=sgRNA_info[1],
+			sgRNA_alignment_start_offset=sgRNA_info[2],
+			cut_distance=3,
+			detail=mock_detail,
+			flank_size=30
+		)
+	# print(mock_cutsite.__dict__)
+
+	mock_cutsite.find_best_sgRNA_alignment()
+
+	print(mock_cutsite.alignment)
+
+	mock_cutsite.calculate_global_positions()
+
+	print(mock_cutsite.global_position)
+
+	print(mock_cutsite.__dict__)
+
+	expected_protospacer_stop = 99760680-1 #results taken from blat -1 to account for 1-index
+
+	expected_protospacer_start = 99760699-1 #results taken from blat -1 to account for 1-index
+
+	print(f"{mock_cutsite.global_position['protospacer_stop']} vs {expected_protospacer_stop}")
+
+	print(f"{mock_cutsite.global_position['protospacer_start']} vs {expected_protospacer_start}")
+
+	assert mock_cutsite.global_position['protospacer_stop'] == expected_protospacer_stop #results taken from blat -1 to account for 1-index
+
+	assert mock_cutsite.global_position['protospacer_start'] == expected_protospacer_start #results taken from blat -1 to account for 1-index
+
+	assert mock_cutsite.global_position['cut'] == 99760699-3-1 #results taken from blat -1 to account for 1-index
+
+	assert len(mock_cutsite.cut_region['sequence']) == 55
 
 # AAAATGAGCAAACATTACTG
 

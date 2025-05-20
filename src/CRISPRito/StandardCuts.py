@@ -23,7 +23,8 @@ from CRISPRito.Utils import (
 	batch_overlaps,
 	batch_nearest_feature,
 	find_revised_pam,
-	df_long_to_wide
+	df_long_to_wide,
+	sliding_windows
 	)
 
 
@@ -351,70 +352,157 @@ class CutSite:
 	def __repr__(self):
 		return f"CutSite(chrom={self.chromosome}, strand={self.strand}, ref_pos={self.ref_position}, cut={self.cut_site} diversity={len(self)})"
 
+	# def find_best_sgRNA_alignment(self):
+	# 	"""
+	# 	Loop through different alignment parameters starting with the preferred alignment method.
+	# 	Start Stop are in reference to the sgRNA alignment 5'->3' on the plus strand 
+	# 	"""
+	# 	# sequence = DNA(self.cut_region['sequence'][:50])
+
+	# 	# print('\nSEQUENCE: ', sequence)
+
+	# 	sequence = DNA(self.cut_region['sequence'])
+
+	# 	pam_length = 3
+
+	# 	for seqname, query_seq in self.sgRNA.items():
+
+	# 		self.alignment['sgRNA'] = seqname
+
+	# 		self.alignment['alignment'] = global_pairwise_align_nucleotide(query_seq, sequence)
+
+	# 		self.alignment['local_start'], self.alignment['local_stop'] = parse_global_alignment(self.alignment['alignment'])
+
+	# 		self.alignment['local_stop'] = self.alignment['local_stop'] - self.sgRNA_alignment_start_offset[self.alignment['sgRNA']]
+
+	# 		self.alignment['local_cut'] = self.alignment['local_stop'] - self.cut_distance
+
+	# 		# PAM search refinement
+
+	# 		self.alignment['PAM'] = str(self.alignment['alignment'][0][1])[self.alignment['local_stop'] + 1 : self.alignment['local_stop'] + 1 + pam_length]
+
+	# 		self.alignment['PAM_gaps'] = 0
+
+	# 		if self.alignment['PAM'][1:] != 'GG': # hardcoded for NGG pams
+
+	# 			pam_search_results = find_revised_pam(
+	# 				sequence = str(self.alignment['alignment'][0][1]),
+	# 				protospacer_start = self.alignment['local_stop'],
+	# 				search_direction = 'forward',
+	# 				max_pam_gaps_allowed = 2,
+	# 				pam_type = 'NGG')
+
+	# 			if not pam_search_results['pam_found']:
+	# 				pam_search_results = find_revised_pam(
+	# 					sequence = str(self.alignment['alignment'][0][1]),
+	# 					protospacer_start = self.alignment['local_stop'],
+	# 					search_direction = 'backward',
+	# 					max_pam_gaps_allowed = 2,
+	# 					pam_type = 'NGG')
+
+	# 			if pam_search_results['pam_found']:
+
+	# 				self.alignment['PAM'] = pam_search_results['revised_pam']
+
+	# 				self.alignment['local_stop'] = pam_search_results['revised_protospacer_start']
+
+	# 				self.alignment['PAM_gaps'] = pam_search_results['pam_n_gap']
+
+	# 		self.alignment['aligned_sequence'] = str(self.alignment['alignment'][0][1])[self.alignment['local_start'] : self.alignment['local_stop'] + 1]
+
+	# 		self.alignment['aligned_gRNA'] = str(self.alignment['alignment'][0][0])[self.alignment['local_start'] : self.alignment['local_stop'] + 1]
+
+	# 		self.alignment['alignment_length'] = len(self.alignment['aligned_sequence'])
+
+	# 		self.alignment['aligned_sequence_gaps'] = self.alignment['aligned_sequence'].count('-')
+
+	# 		self.alignment['aligned_gRNA_gaps'] = self.alignment['aligned_gRNA'].count('-')
+
+	# 		if self.alignment['alignment_length'] in self.sgRNA_alignment_tolerance[seqname]:
+	# 			break
+
 	def find_best_sgRNA_alignment(self):
 		"""
 		Loop through different alignment parameters starting with the preferred alignment method.
 		Start Stop are in reference to the sgRNA alignment 5'->3' on the plus strand 
+		Sequence is already reverse complemented if it's a minus cut
 		"""
-		sequence = DNA(self.cut_region['sequence'])
+
+		window_coordinates = sliding_windows(seq_length = len(self.cut_region['sequence']), window_size = 55, step_size = 5)
+
+		window_coordinates.insert(0, (0, len(self.cut_region['sequence'])))
 
 		pam_length = 3
 
-		for seqname, query_seq in self.sgRNA.items():
+		for window_start, window_stop in window_coordinates:
 
-			self.alignment['sgRNA'] = seqname
+			sequence = DNA(self.cut_region['sequence'][window_start:window_stop])
 
-			self.alignment['alignment'] = global_pairwise_align_nucleotide(query_seq, sequence)
+			for seqname, query_seq in self.sgRNA.items():
 
-			self.alignment['local_start'], self.alignment['local_stop'] = parse_global_alignment(self.alignment['alignment'])
+				self.alignment['sgRNA'] = seqname
 
-			self.alignment['local_stop'] = self.alignment['local_stop'] - self.sgRNA_alignment_start_offset[self.alignment['sgRNA']]
+				self.alignment['alignment'] = global_pairwise_align_nucleotide(query_seq, sequence)
 
-			self.alignment['local_cut'] = self.alignment['local_stop'] - self.cut_distance
+				self.alignment['local_start'], self.alignment['local_stop'] = parse_global_alignment(self.alignment['alignment'])
 
-			# PAM search refinement
+				self.alignment['local_stop'] = self.alignment['local_stop'] - self.sgRNA_alignment_start_offset[self.alignment['sgRNA']]
 
-			self.alignment['PAM'] = str(self.alignment['alignment'][0][1])[self.alignment['local_stop'] + 1 : self.alignment['local_stop'] + 1 + pam_length]
+				self.alignment['local_cut'] = self.alignment['local_stop'] - self.cut_distance
 
-			self.alignment['PAM_gaps'] = 0
+				# PAM search refinement
 
-			if self.alignment['PAM'][1:] != 'GG': # hardcoded for NGG pams
+				self.alignment['PAM'] = str(self.alignment['alignment'][0][1])[self.alignment['local_stop'] + 1 : self.alignment['local_stop'] + 1 + pam_length]
 
-				pam_search_results = find_revised_pam(
-					sequence = str(self.alignment['alignment'][0][1]),
-					protospacer_start = self.alignment['local_stop'],
-					search_direction = 'forward',
-					max_pam_gaps_allowed = 2,
-					pam_type = 'NGG')
+				self.alignment['PAM_gaps'] = 0
 
-				if not pam_search_results['pam_found']:
+				if self.alignment['PAM'][1:] != 'GG': # hardcoded for NGG pams
+
 					pam_search_results = find_revised_pam(
 						sequence = str(self.alignment['alignment'][0][1]),
 						protospacer_start = self.alignment['local_stop'],
-						search_direction = 'backward',
+						search_direction = 'forward',
 						max_pam_gaps_allowed = 2,
 						pam_type = 'NGG')
 
-				if pam_search_results['pam_found']:
+					if not pam_search_results['pam_found']:
+						pam_search_results = find_revised_pam(
+							sequence = str(self.alignment['alignment'][0][1]),
+							protospacer_start = self.alignment['local_stop'],
+							search_direction = 'backward',
+							max_pam_gaps_allowed = 2,
+							pam_type = 'NGG')
 
-					self.alignment['PAM'] = pam_search_results['revised_pam']
+					if pam_search_results['pam_found']:
 
-					self.alignment['local_stop'] = pam_search_results['revised_protospacer_start']
+						self.alignment['PAM'] = pam_search_results['revised_pam']
 
-					self.alignment['PAM_gaps'] = pam_search_results['pam_n_gap']
+						self.alignment['local_stop'] = pam_search_results['revised_protospacer_start']
 
-			self.alignment['aligned_sequence'] = str(self.alignment['alignment'][0][1])[self.alignment['local_start'] : self.alignment['local_stop'] + 1]
+						self.alignment['PAM_gaps'] = pam_search_results['pam_n_gap']
 
-			self.alignment['aligned_gRNA'] = str(self.alignment['alignment'][0][0])[self.alignment['local_start'] : self.alignment['local_stop'] + 1]
+				self.alignment['aligned_sequence'] = str(self.alignment['alignment'][0][1])[self.alignment['local_start'] : self.alignment['local_stop'] + 1]
 
-			self.alignment['alignment_length'] = len(self.alignment['aligned_sequence'])
+				self.alignment['aligned_gRNA'] = str(self.alignment['alignment'][0][0])[self.alignment['local_start'] : self.alignment['local_stop'] + 1]
 
-			self.alignment['aligned_sequence_gaps'] = self.alignment['aligned_sequence'].count('-')
+				self.alignment['alignment_length'] = len(self.alignment['aligned_sequence'])
 
-			self.alignment['aligned_gRNA_gaps'] = self.alignment['aligned_gRNA'].count('-')
+				self.alignment['aligned_sequence_gaps'] = self.alignment['aligned_sequence'].count('-')
 
-			if self.alignment['alignment_length'] in self.sgRNA_alignment_tolerance[seqname]:
-				break
+				self.alignment['aligned_gRNA_gaps'] = self.alignment['aligned_gRNA'].count('-')
+
+				if self.alignment['alignment_length'] in self.sgRNA_alignment_tolerance[seqname]:
+					# print('LOOK AT ME 1', self.cut_region['start'])
+
+					# Adjust global coordinates based on the window start position
+					self.cut_region['start'] = self.cut_region['start'] + window_start
+					
+					self.cut_region['stop'] = self.cut_region['start'] + (window_stop - window_start)
+
+					# Slice the sequence to match the chosen window
+					self.cut_region['sequence'] = self.cut_region['sequence'][window_start:window_stop]
+					# print('LOOK AT ME 2', self.cut_region['start'])
+					return
 
 	def print_alignment_stats(self):
 		for k,v in self.alignment.items():

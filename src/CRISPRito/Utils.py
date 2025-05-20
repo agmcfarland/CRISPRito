@@ -201,6 +201,24 @@ def df_long_to_wide(df, to_rows, to_columns, column_prefix = None):
 
 	return df_wide
 
+def sliding_windows(seq_length, window_size, step_size):
+	"""
+	Generate (start, end) index pairs for subsetting a sequence.
+	
+	Parameters:
+	- seq_length (int): Length of the sequence.
+	- window_size (int): Length of each window.
+	- step_size (int): Number of bases to move the window each step.
+
+	Returns:
+	- List of (start, end) tuples.
+	"""
+	windows = []
+	for start in range(0, seq_length - window_size + 1, step_size):
+		end = start + window_size
+		windows.append((start, end))
+	return windows
+
 # # def extract_annotations(df, position):
 # # 	return df[(df['start'] <= position) & (df['end'] >= position)]
 

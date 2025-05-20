@@ -4,8 +4,6 @@ cd /data/CRISPRito
 
 python -m pytest --disable-warnings -sv tests
 
-/home/ubuntu/miniconda3/envs/CRISPRito/bin/python -m pytest -sv tests/unit/test_misc.py
-
 python -m pytest --disable-warnings -sv /data/CRISPRito/tests/unit/test_RunParameters.py
 
 python -m pytest -sv tests/unit/test_ProcessGroup.py
@@ -27,6 +25,8 @@ pytest -sv tests/unit/test_StandardCuts.py::test_multiprocessing_cut_site_alignm
 pytest -sv tests/unit/test_StandardCuts.py::test_extract_in_refseq_feature
 
 pytest -sv tests/unit/test_standardize_scores.py
+
+pytest -sv tests/unit/test_misc.py
 
 
 # pytest -sv tests/unit/test_standard_cut_alignments.py::test_alignment6
