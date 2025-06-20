@@ -193,10 +193,8 @@ class StandardCuts:
 
 		self.df_reference_cut_sites = df_sequence
 
-	def assign_features(self, all_features, gene_names):
+	def assign_features(self, feature_manager):
 		"""
-		all_features must have "feature" column
-		gene_names must have "gene_id" as column for gene name
 		"""
 		all_standard_cuts = []
 		for standard_cut in self.cut_sites:
@@ -204,21 +202,77 @@ class StandardCuts:
 
 		all_standard_cuts = convert_df_to_granges(pd.DataFrame(all_standard_cuts))
 
-		all_features = convert_df_to_granges(all_features)
+		# For loop begins here
+		for feature_, info_ in feature_manager.registry.items():
 
-		gene_names = convert_df_to_granges(gene_names)		
+			feature = convert_df_to_granges(pd.read_csv(info_['file_path']))
 
-		feature_cut_overlaps = batch_overlaps(gr = all_features, sites_gr = all_standard_cuts)
+			if info_['type'] == 'presence_absence':
+				feature_cut_overlaps = batch_overlaps(gr = feature, sites_gr = all_standard_cuts)
 
-		feature_cut_overlaps = feature_cut_overlaps.drop(columns = ['Start', 'End', 'name2']).rename(columns = {'Start_b': 'Start', 'End_b': 'End'})
+				for standard_cut in self.cut_sites:
 
-		feature_cut_nearest = batch_nearest_feature(gr = gene_names, sites_gr = all_standard_cuts)
+					standard_cut.extract_binary_feature(df = feature_cut_overlaps, name = feature_)
 
-		feature_cut_nearest = feature_cut_nearest.drop(columns = ['Start', 'End']).rename(columns = {'Start_b': 'Start', 'End_b': 'End', 'name2': 'name'})
+			if info_['type'] == 'annotation':
 
-		for standard_cut in self.cut_sites:
-			standard_cut.extract_features(df = feature_cut_overlaps)
-			standard_cut.extract_nearest_gene(df = feature_cut_nearest)
+				feature_cut_overlaps = batch_nearest_feature(gr = feature, sites_gr = all_standard_cuts)
+					
+				for standard_cut in self.cut_sites:
+
+					standard_cut.extract_feature_with_annotation(df = feature_cut_overlaps, name = feature_)
+
+		# print('{')
+		# for standard_cut in self.cut_sites:
+		# 	print(f"'{standard_cut}': {standard_cut.features},")
+		# print('}')
+
+		# for standard_cut in self.cut_sites:
+		# 	print(self.cut_sites.features)
+
+		# all_features = convert_df_to_granges(all_features)
+
+		# gene_names = convert_df_to_granges(gene_names)		
+
+		# feature_cut_overlaps = batch_overlaps(gr = all_features, sites_gr = all_standard_cuts)
+
+		# feature_cut_overlaps = feature_cut_overlaps.drop(columns = ['Start', 'End', 'name2']).rename(columns = {'Start_b': 'Start', 'End_b': 'End'})
+
+		# feature_cut_nearest = batch_nearest_feature(gr = gene_names, sites_gr = all_standard_cuts)
+
+		# feature_cut_nearest = feature_cut_nearest.drop(columns = ['Start', 'End']).rename(columns = {'Start_b': 'Start', 'End_b': 'End', 'name2': 'name'})
+
+		# for standard_cut in self.cut_sites:
+		# 	standard_cut.extract_features(df = feature_cut_overlaps)
+		# 	standard_cut.extract_nearest_gene(df = feature_cut_nearest)
+
+
+	# def assign_features(self, all_features, gene_names):
+	# 	"""
+	# 	all_features must have "feature" column
+	# 	gene_names must have "gene_id" as column for gene name
+	# 	"""
+	# 	all_standard_cuts = []
+	# 	for standard_cut in self.cut_sites:
+	# 		all_standard_cuts.append({'Chromosome': standard_cut.chromosome , 'Start': standard_cut.global_position['cut'], 'End': standard_cut.global_position['cut'], 'cut_cluster': standard_cut.cut_cluster})
+
+	# 	all_standard_cuts = convert_df_to_granges(pd.DataFrame(all_standard_cuts))
+
+	# 	all_features = convert_df_to_granges(all_features)
+
+	# 	gene_names = convert_df_to_granges(gene_names)		
+
+	# 	feature_cut_overlaps = batch_overlaps(gr = all_features, sites_gr = all_standard_cuts)
+
+	# 	feature_cut_overlaps = feature_cut_overlaps.drop(columns = ['Start', 'End', 'name2']).rename(columns = {'Start_b': 'Start', 'End_b': 'End'})
+
+	# 	feature_cut_nearest = batch_nearest_feature(gr = gene_names, sites_gr = all_standard_cuts)
+
+	# 	feature_cut_nearest = feature_cut_nearest.drop(columns = ['Start', 'End']).rename(columns = {'Start_b': 'Start', 'End_b': 'End', 'name2': 'name'})
+
+	# 	for standard_cut in self.cut_sites:
+	# 		standard_cut.extract_features(df = feature_cut_overlaps)
+	# 		standard_cut.extract_nearest_gene(df = feature_cut_nearest)
 
 	@report_time
 	def build_cut_profile(self):
@@ -463,16 +517,32 @@ class CutSite:
 
 		self.cut_site = self.global_position['cut']
 
-	def extract_features(self, df):
-		self.features['feature_full'] = df[df['cut_cluster'] == self.cut_cluster]
-
-
-	def extract_nearest_gene(self, df):
+	def extract_binary_feature(self, df, name):
 		df = df[df['cut_cluster'] == self.cut_cluster]
 
-		self.features['nearest_gene'] = df.gene.item()
+		if len(df) > 0:
 
-		self.features['nearest_gene_distance'] = df.Distance.item()
+			self.features[f'in_{name}'] = 1
+		
+		else:
+
+			self.features[f'in_{name}'] = 0
+
+	def extract_feature_with_annotation(self, df, name):
+
+		df = df[df['cut_cluster'] == self.cut_cluster]
+
+		if len(df) > 0:
+
+			self.features[f'nearest_{name}'] = df.annotation.item()
+
+			self.features[f'nearest_{name}_distance'] = df.Distance.item()
+
+		else:
+
+			self.features[f'nearest_{name}'] = 'not_detected'
+
+			self.features[f'nearest_{name}_distance'] = 0
 
 
 	def build_simple_cut_profile(self):
@@ -506,26 +576,16 @@ class CutSite:
 			'chromosome': self.chromosome,
 			'strand': self.strand,
 			'cut': 0,
-			'exon': 0,
-			'intron': 0,
-			'intergenic': 0,
+			# 'exon': 0,
+			# 'intron': 0,
+			# 'intergenic': 0,
 			'overlap': len(self.detail)
 			}
 
 		# genomic feature
-		cut_site_features = self.features.get('feature_full')
+		if len(self.features) > 0:
+			self.profile.update(self.features)
 
-		if cut_site_features is not None and not cut_site_features.empty:
-			present_features = set(cut_site_features['feature'].unique())
-			for feature in ('exon', 'intron'):
-				self.profile[feature] = int(feature in present_features)
-
-		if sum([self.profile['exon'], self.profile['intron']]) == 0:
-			self.profile['intergenic'] = 1
-
-		self.profile['nearest_gene'] = self.features['nearest_gene']
-
-		self.profile['nearest_gene_distance'] = self.features['nearest_gene_distance']
 
 		# measurements
 		for measurement in ['zscore', 'min_max', 'local_rank']:

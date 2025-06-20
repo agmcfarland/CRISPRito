@@ -6,6 +6,7 @@ import pytest
 import os
 import pathlib
 import sys
+import pandas as pd
 
 
 # sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
@@ -22,6 +23,13 @@ def setup_temp_dir(tmp_path, scope="session", autouse=True):
     temp_dir = pjoin(tmp_path, "test_dir")
     os.makedirs(temp_dir)
     return temp_dir
+
+
+@pytest.fixture
+def retrieve_feature_input(scope = 'session', autouse = True):
+	df = pd.read_csv(pjoin(pathlib.Path(__file__).parent, "data", 'input_feature_driver.csv'))
+	df['file_path'] = df['file_path'].apply(lambda x: pjoin('/data/GenomicTrackRepository/data/processed/hg38', x))
+	return df
 
 
 @pytest.fixture

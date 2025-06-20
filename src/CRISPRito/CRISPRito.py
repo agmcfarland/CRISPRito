@@ -14,8 +14,7 @@ def main():
 	parser.add_argument("--sample_sheet_path", required=True)
 	parser.add_argument("--output_dir", required=True)
 	parser.add_argument("--genome_path", required=True, default = None)
-	parser.add_argument("--feature_path", required=False, default = None)
-	parser.add_argument("--gene_names_path", required=False, default = None)
+	parser.add_argument("--feature_table_path", required=False)
 	parser.add_argument("--overwrite_output_dir", action="store_true")
 	parser.add_argument("--flank_size", type=int, default=30)
 	parser.add_argument("--sgRNA", required=True)
@@ -30,8 +29,7 @@ def main():
 		sample_sheet_path=args.sample_sheet_path,
 		output_dir=args.output_dir,
 		genome_path=args.genome_path,
-		feature_path=args.feature_path,
-		gene_names_path=args.gene_names_path,
+		feature_table_path=args.feature_table_path,
 		overwrite_output_dir=args.overwrite_output_dir
 	)
 
@@ -61,8 +59,7 @@ def main():
 				group_samplesheet_path=group_file,
 				output_path=args.output_dir,
 				genome_path=args.genome_path,
-				feature_path=args.feature_path,
-				gene_names_path=args.gene_names_path,
+				feature_table_path=args.feature_table_path,
 				flank_size=args.flank_size,
 				sgRNA=args.sgRNA,
 				PAM_alignment=args.PAM_alignment,

@@ -3,17 +3,19 @@ import os
 from os.path import join as pjoin
 import pandas as pd
 from CRISPRito.StandardCuts import StandardCuts
+from CRISPRito.FeatureManager import FeatureManager
 
 def process_group(
 	group_samplesheet_path,
 	output_path,
 	genome_path, 
-	feature_path,
-	gene_names_path,
+	# feature_path,
+	# gene_names_path,
 	flank_size:int = 30, 
 	sgRNA:str = '', 
 	PAM_alignment:str = 'NGG',
-	range_threshold = 20
+	range_threshold = 20,
+	feature_table_path = None
 	):
 	# troubleshooting inputs start
 	# group_samplesheet_path = '/data/friederike_herbst_nowrouzi_project/projects/base_editor_ptprc_project/data/processed/1-crisprito_analysis/0-make_standard_inputs/iguide_bfx_rhamp/1_group_samplesheet.csv'
@@ -43,6 +45,8 @@ def process_group(
 
 	standard_group = StandardCuts(sample_sheet = df_group_samplesheet, flank_size = flank_size, sgRNA = sgRNA, PAM_alignment = PAM_alignment)	
 
+	feature_manager = FeatureManager(feature_table = pd.read_csv(feature_table_path))
+
 	standard_group.load_cut_sites()
 	# Update this
 	standard_group.df_cut_sites = standard_group.df_cut_sites[standard_group.df_cut_sites['chromosome'].isin(allowed_chromosome)]
@@ -66,7 +70,7 @@ def process_group(
 	standard_group.parallel_build_cut_site_alignment()
 
 	# Update this
-	standard_group.assign_features(all_features = pd.read_csv(feature_path), gene_names = pd.read_csv(gene_names_path))
+	standard_group.assign_features(feature_manager = feature_manager)
 
 	standard_group.build_cut_profile()
 
@@ -100,12 +104,13 @@ def main():
 	parser.add_argument("--group_samplesheet_path", help="Path to the sample sheet CSV.")
 	parser.add_argument("--output_dir", default="CRISPRito_output", help="Directory to save output CSV.")
 	parser.add_argument("--genome_path", required=True, help="Path to the gzipped genome FASTA")
-	parser.add_argument("--feature_path", required=True, help="Path to the features CSV file.")
-	parser.add_argument("--gene_names_path", required=True, help="Path to the gene names CSV file.")
+	# parser.add_argument("--feature_path", required=True, help="Path to the features CSV file.")
+	# parser.add_argument("--gene_names_path", required=True, help="Path to the gene names CSV file.")
 	parser.add_argument("--flank_size", type=int, default=30, help="Flank size around cut sites.")
 	parser.add_argument("--sgRNA", type=str, default="", help="sgRNA sequence (optional).")
 	parser.add_argument("--PAM_alignment", type=str, default="-GG", help="PAM sequence for alignment.")
 	parser.add_argument("--range_threshold", type=int, default=20, help="Distance between clusters")
+	parser.add_argument("--feature_table_path", type=str, help="Path to feature table with features data.")
 
 	args = parser.parse_args()
 
@@ -113,12 +118,13 @@ def main():
 		group_samplesheet_path=args.group_samplesheet_path,
 		output_dir=args.output_dir,
 		genome_path=args.genome_path,
-		feature_path=args.feature_path,
-		gene_names_path=args.gene_names_path,
+		# feature_path=args.feature_path,
+		# gene_names_path=args.gene_names_path,
 		flank_size=args.flank_size,
 		sgRNA=args.sgRNA,
 		PAM_alignment=args.PAM_alignment,
-		range_threshold=args.range_threshold
+		range_threshold=args.range_threshold,
+		feature_table_path = args.feature_table_path
 	)
 
 
