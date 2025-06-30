@@ -1,6 +1,6 @@
 [project]
 name = "CRISPRito"
-version = "0.0.2"
+version = "0.1.0"
 description = "Comprehensive nomination of CRISPR sites from cutting and editing data"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -38,11 +38,7 @@ test = ["pytest", "pytest-cov"]
 [project.scripts]
 setup_run = "CRISPRito.SetupRun:main"
 process_group = "CRISPRito.ProcessGroup:main"
-CRISPRito_cut = " CRISPRito.CRISPRito:main"
-
-# [tool.setuptools]
-# packages = ["CRISPRito"]
-# package-dir = {"" = "src"}
+CRISPRito = " CRISPRito.CRISPRito:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

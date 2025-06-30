@@ -13,20 +13,9 @@ def load_1_group_samplesheet_ptprc(project_test_data_directory):
 
 	return df_gr1
 
-# real_read_csv = pd.read_csv
-
-# def side_effect_read_csv_factory(preloaded_df, trigger):
-# 	def _side_effect_read_csv(path, *args, **kwargs):
-# 		if path == trigger:
-# 			return preloaded_df
-# 		else:
-# 			return real_read_csv(path, *args, **kwargs)
-			
-# 	return _side_effect_read_csv
-
 def side_effect_read_csv_factory(path_to_df_map):
-	# Unmocked read_csv straight from pandas module
-	real_read_csv = __import__('pandas').read_csv
+	
+	real_read_csv = __import__('pandas').read_csv # Unmocked read_csv straight from pandas module
 
 	def _side_effect_read_csv(path, *args, **kwargs):
 		if path in path_to_df_map:
@@ -42,6 +31,9 @@ def test_process_group_1(
 	retrieve_feature_input,
 	path_to_hg38_genome
 ):
+	"""
+	Testing strategy is to mock some of the read_csv inputs so that the proper file_paths within them can be constructed.
+	"""
 	output_dir = '/fake/path'
 	input_samplesheet_path = "group1_fake_samplesheet.csv"
 	input_featuresheet_path = 'fake_featuresheet.csv'
@@ -73,48 +65,3 @@ def test_process_group_1(
 		assert any('1_group_method_counts' in path for path in filepaths)
 		assert any('1_group_id_counts' in path for path in filepaths)
 
-
-# @mock.patch('CRISPRito.ProcessGroup.pd.core.frame.DataFrame.to_csv')
-# @mock.patch('CRISPRito.ProcessGroup.pd.read_csv')
-# def test_process_group_1(
-# 	mock_read_csv,
-# 	mock_to_csv,
-# 	project_test_data_directory,
-# 	load_1_group_samplesheet_ptprc,
-# 	retrieve_feature_input,
-# 	path_to_hg38_genome
-# 	):
-
-# 	"""
-# 	pytest -sv tests/unit/test_ProcessGroup.py::test_process_group_1
-# 	"""
-# 	output_dir = '/fake/path'
-# 	input_samplesheet_path = "group1_fake_samplesheet.csv"
-# 	input_featuresheet_path = 'fake_featuresheet.csv'
-
-# 	# Combine all preloaded DataFrames into a dictionary
-# 	preloaded_csvs = {
-# 		input_samplesheet_path: load_1_group_samplesheet_ptprc,
-# 		input_featuresheet_path: retrieve_feature_input
-# 	}
-
-# 	mock_read_csv.side_effect = side_effect_read_csv_factory(preloaded_csvs)
-
-
-# 	process_group(
-# 		group_samplesheet_path=input_samplesheet_path,
-# 		output_path=output_dir,
-# 		genome_path= path_to_hg38_genome,
-# 		flank_size=30,
-# 		sgRNA='AAAATATGCAAACATCACTG',
-# 		PAM_alignment='-GG',
-# 		feature_table_path = input_featuresheet_path
-# 	)
-
-# 	mock_to_csv.call_count == 3
-
-# 	filepaths = [call.args[0] for call in mock_to_csv.call_args_list]
-
-# 	assert any('1_group_cut_profiles' in path for path in filepaths)
-# 	assert any('1_group_method_counts' in path for path in filepaths)
-# 	assert any('1_group_id_counts' in path for path in filepaths)

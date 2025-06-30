@@ -7,8 +7,7 @@ def setup_run(
 	sample_sheet_path,
 	output_dir,
 	genome_path,
-	feature_path = None,
-	gene_names_path = None,
+	feature_table_path,
 	overwrite_output_dir = False):
 	"""
 	"""
@@ -23,8 +22,7 @@ def setup_run(
 	run_parameters.check_inputs_exist(
 		sample_sheet_path = sample_sheet_path,
 		genome_path = genome_path,
-		feature_path = feature_path,
-		gene_names_path = gene_names_path
+		feature_table_path = feature_table_path
 		)
 
 	manager = SampleManager(
@@ -42,8 +40,7 @@ def main():
 	parser.add_argument("--sample_sheet_path", help="Path to the group sample sheet CSV.")
 	parser.add_argument("--output_dir", help="Directory to store run outputs.")
 	parser.add_argument("--genome_path", help="Path to the reference genome file.")
-	parser.add_argument("--feature_path", help="Path to the genomic features CSV file.")
-	parser.add_argument("--gene_names_path", help="Path to the gene names CSV file.")
+	parser.add_argument("--feature_table_path", help="Path to the feature table CSV file.")
 	parser.add_argument("--overwrite_output_dir", action="store_true", help="Overwrite output directory if it exists.")
 
 	args = parser.parse_args()
@@ -54,8 +51,7 @@ def main():
 		sample_sheet_path=args.sample_sheet_path,
 		output_dir=args.output_dir,
 		genome_path=args.genome_path,
-		feature_path=args.feature_path,
-		gene_names_path=args.gene_names_path,
+		feature_table_path=args.feature_table_path,
 		overwrite_output_dir=args.overwrite_output_dir
 	)
 

@@ -22,17 +22,18 @@ class RunParameters:
 				print(f"Output directory '{self.output_dir}' already exists. Stopping run.")
 				sys.exit()
 		else:
-			os.makedirs(self.output_dir)
+			os.makedirs(self.output_dir, exist_ok = True)
 			print(f"Created output directory: {self.output_dir}")
 
 	def check_inputs_exist(
 		self,
 		sample_sheet_path,
+		feature_table_path,
 		genome_path,
-		feature_path,
-		gene_names_path
+		# feature_path,
+		# gene_names_path
 		):
-		for i in [sample_sheet_path, genome_path, feature_path, gene_names_path]:
+		for i in [sample_sheet_path, genome_path, feature_table_path]:
 			if i !=  None:
 				if not os.path.exists(i):
 					raise ValueError(f'{i} does not exist')

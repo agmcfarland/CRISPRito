@@ -10,6 +10,33 @@ from scipy.stats import zscore
 from sklearn.preprocessing import MinMaxScaler
 import pyranges as pr
 
+def alignment_levenshtein(observed, reference):
+    """
+    Compute Levenshtein distance from aligned sequences.
+
+    Parameters:
+    - observed (str): Aligned observed sequence (may contain '-')
+    - reference (str): Aligned reference sequence (may contain '-')
+
+    Returns:
+    - int: Total edit distance (insertions + deletions + substitutions)
+    """
+    if len(observed) != len(reference):
+        raise ValueError("Aligned sequences must be the same length.")
+
+    insertions = deletions = substitutions = 0
+
+    for o, r in zip(observed, reference):
+        if o == '-' and r != '-':
+            deletions += 1
+        elif o != '-' and r == '-':
+            insertions += 1
+        elif o != r:
+            substitutions += 1
+
+    return insertions + deletions + substitutions
+
+
 def greedy_clustering_first(numbers, range_threshold):
 	"""
 	The current number is compared to the first item in the current cluster when 
@@ -222,24 +249,6 @@ def sliding_windows(seq_length, window_size, step_size):
 		windows.append((start, end))
 	return windows
 
-def levenshtein_distance(s1, s2):
-    if len(s1) < len(s2):
-        return levenshtein_distance(s2, s1)
-
-    if len(s2) == 0:
-        return len(s1)
-
-    previous_row = range(len(s2) + 1)
-    for i, c1 in enumerate(s1):
-        current_row = [i + 1]
-        for j, c2 in enumerate(s2):
-            insertions = previous_row[j + 1] + 1
-            deletions = current_row[j] + 1
-            substitutions = previous_row[j] + (c1 != c2)
-            current_row.append(min(insertions, deletions, substitutions))
-        previous_row = current_row
-    
-    return previous_row[-1]
 
 # # def extract_annotations(df, position):
 # # 	return df[(df['start'] <= position) & (df['end'] >= position)]

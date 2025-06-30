@@ -24,7 +24,8 @@ from CRISPRito.Utils import (
 	batch_nearest_feature,
 	find_revised_pam,
 	df_long_to_wide,
-	sliding_windows
+	sliding_windows,
+	alignment_levenshtein
 	)
 
 
@@ -147,9 +148,9 @@ class StandardCuts:
 
 		self.df_cut_sites['zscore'] = self.df_cut_sites.groupby('id')['score'].transform(lambda x: scale_zscore(x.tolist(), degrees_of_freedom = 0))
 
-		self.df_cut_sites['min_max'] = self.df_cut_sites.groupby('id')['score'].transform(lambda x: scale_min_max(x.tolist()))
+		self.df_cut_sites['min_max'] = self.df_cut_sites.groupby('id')['zscore'].transform(lambda x: scale_min_max(x.tolist()))
 
-		self.df_cut_sites['min_max'] = self.df_cut_sites.apply(lambda x: x['score'] if x['measurement_type'] == 'one_scaled' else x['min_max'], axis = 1)
+		# self.df_cut_sites['min_max'] = self.df_cut_sites.apply(lambda x: x['score'] if x['measurement_type'] == 'one_scaled' else x['min_max'], axis = 1)
 
 		self.df_cut_sites = (self.df_cut_sites.sort_values(['id', 'score'], ascending=[True, False]).assign(local_rank=lambda x: x.groupby('id').cumcount() + 1))
 
@@ -221,58 +222,6 @@ class StandardCuts:
 				for standard_cut in self.cut_sites:
 
 					standard_cut.extract_feature_with_annotation(df = feature_cut_overlaps, name = feature_)
-
-		# print('{')
-		# for standard_cut in self.cut_sites:
-		# 	print(f"'{standard_cut}': {standard_cut.features},")
-		# print('}')
-
-		# for standard_cut in self.cut_sites:
-		# 	print(self.cut_sites.features)
-
-		# all_features = convert_df_to_granges(all_features)
-
-		# gene_names = convert_df_to_granges(gene_names)		
-
-		# feature_cut_overlaps = batch_overlaps(gr = all_features, sites_gr = all_standard_cuts)
-
-		# feature_cut_overlaps = feature_cut_overlaps.drop(columns = ['Start', 'End', 'name2']).rename(columns = {'Start_b': 'Start', 'End_b': 'End'})
-
-		# feature_cut_nearest = batch_nearest_feature(gr = gene_names, sites_gr = all_standard_cuts)
-
-		# feature_cut_nearest = feature_cut_nearest.drop(columns = ['Start', 'End']).rename(columns = {'Start_b': 'Start', 'End_b': 'End', 'name2': 'name'})
-
-		# for standard_cut in self.cut_sites:
-		# 	standard_cut.extract_features(df = feature_cut_overlaps)
-		# 	standard_cut.extract_nearest_gene(df = feature_cut_nearest)
-
-
-	# def assign_features(self, all_features, gene_names):
-	# 	"""
-	# 	all_features must have "feature" column
-	# 	gene_names must have "gene_id" as column for gene name
-	# 	"""
-	# 	all_standard_cuts = []
-	# 	for standard_cut in self.cut_sites:
-	# 		all_standard_cuts.append({'Chromosome': standard_cut.chromosome , 'Start': standard_cut.global_position['cut'], 'End': standard_cut.global_position['cut'], 'cut_cluster': standard_cut.cut_cluster})
-
-	# 	all_standard_cuts = convert_df_to_granges(pd.DataFrame(all_standard_cuts))
-
-	# 	all_features = convert_df_to_granges(all_features)
-
-	# 	gene_names = convert_df_to_granges(gene_names)		
-
-	# 	feature_cut_overlaps = batch_overlaps(gr = all_features, sites_gr = all_standard_cuts)
-
-	# 	feature_cut_overlaps = feature_cut_overlaps.drop(columns = ['Start', 'End', 'name2']).rename(columns = {'Start_b': 'Start', 'End_b': 'End'})
-
-	# 	feature_cut_nearest = batch_nearest_feature(gr = gene_names, sites_gr = all_standard_cuts)
-
-	# 	feature_cut_nearest = feature_cut_nearest.drop(columns = ['Start', 'End']).rename(columns = {'Start_b': 'Start', 'End_b': 'End', 'name2': 'name'})
-
-	# 	for standard_cut in self.cut_sites:
-	# 		standard_cut.extract_features(df = feature_cut_overlaps)
-	# 		standard_cut.extract_nearest_gene(df = feature_cut_nearest)
 
 	@report_time
 	def build_cut_profile(self):
@@ -488,6 +437,13 @@ class CutSite:
 					# Slice the sequence to match the chosen window
 					self.cut_region['sequence'] = self.cut_region['sequence'][window_start:window_stop]
 					# print('LOOK AT ME 2', self.cut_region['start'])
+
+					# levenshtein distance
+					self.alignment['lev_distance'] = alignment_levenshtein(
+						observed = self.alignment['aligned_sequence'], 
+						reference = self.alignment['aligned_gRNA']
+						)
+
 					return
 
 	def print_alignment_stats(self):
@@ -516,6 +472,13 @@ class CutSite:
 			self.global_position['cut'] = self.global_position['protospacer_start'] - self.cut_distance	
 
 		self.cut_site = self.global_position['cut']
+
+	def extract_protospacer(self):
+		"""
+		Place holder if this is to be a new function
+		"""
+		pass
+
 
 	def extract_binary_feature(self, df, name):
 		df = df[df['cut_cluster'] == self.cut_cluster]
@@ -563,7 +526,7 @@ class CutSite:
 			self.profile[feature] = self.alignment[feature]
 
 		# alignment
-		for feature in ['aligned_sequence', 'aligned_gRNA', 'alignment_length', 'PAM', 'PAM_gaps']:
+		for feature in ['aligned_sequence', 'aligned_gRNA', 'alignment_length', 'PAM', 'PAM_gaps', 'lev_distance']:
 			self.profile[feature] = self.alignment[feature]
 
 		self.profile['cut_region_sequence'] = self.cut_region['sequence']
@@ -586,7 +549,6 @@ class CutSite:
 		if len(self.features) > 0:
 			self.profile.update(self.features)
 
-
 		# measurements
 		for measurement in ['zscore', 'min_max', 'local_rank']:
 			result = central_tendency(self.detail[measurement])
@@ -604,7 +566,7 @@ class CutSite:
 			self.profile[feature] = self.alignment[feature]
 
 		# alignment
-		for feature in ['aligned_sequence', 'aligned_gRNA', 'alignment_length', 'PAM', 'PAM_gaps']:
+		for feature in ['aligned_sequence', 'aligned_gRNA', 'alignment_length', 'PAM', 'PAM_gaps', 'lev_distance']:
 			self.profile[feature] = self.alignment[feature]
 
 		self.profile['cut_region_sequence'] = self.cut_region['sequence']

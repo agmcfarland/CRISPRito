@@ -31,6 +31,12 @@ def retrieve_feature_input(scope = 'session', autouse = True):
 	df['file_path'] = df['file_path'].apply(lambda x: pjoin('/data/GenomicTrackRepository/data/processed/hg38', x))
 	return df
 
+@pytest.fixture
+def path_to_feature_table(scope = 'session', autouse = True):
+	"""
+	"""
+	return '/data/CRISPRito/tests/data/input_feature_driver.csv'
+
 
 @pytest.fixture
 def path_to_hg38_genome(scope = 'session', autouse = True):

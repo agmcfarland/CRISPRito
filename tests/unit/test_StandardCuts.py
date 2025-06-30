@@ -551,130 +551,6 @@ def check_cut_site_correct(standard_group, expected_results):
 			else:
 				assert v == expected_results[str(standard_cut)][k]
 
-# def test_extract_in_refseq_feature(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):
-# 	"""
-# 	pytest -sv tests/unit/test_StandardCuts.py::test_extract_in_refseq_feature
-# 	"""
-
-# 	expected_results = {
-# 	'CutSite(chrom=chr1, strand=+, ref_pos=183741771, cut=183741786 diversity=1)': {'feature_full': 4,
-# 	# 'genomic_summary':2,
-# 	'nearest_gene':'RGL1',
-# 	'nearest_gene_distance':0.0},
-
-
-# 	'CutSite(chrom=chr1, strand=+, ref_pos=198706743, cut=198706753 diversity=3)': {'feature_full': 2,
-# 	# 'genomic_summary':1,
-# 	'nearest_gene':'PTPRC',
-# 	'nearest_gene_distance':0.0},
-
-
-# 	'CutSite(chrom=chr14, strand=+, ref_pos=40300864, cut=40300879 diversity=1)': {'feature_full': 0,
-# 	# 'genomic_summary':0,
-# 	'nearest_gene':'FBXO33',
-# 	'nearest_gene_distance':868447.0},
-
-
-# 	'CutSite(chrom=chr18, strand=+, ref_pos=57630524, cut=57630539 diversity=1)': {'feature_full': 0,
-# 	# 'genomic_summary':0,
-# 	'nearest_gene':'NARS1',
-# 	'nearest_gene_distance':8704.0},
-
-
-# 	'CutSite(chrom=chr18, strand=-, ref_pos=41108133, cut=41108139 diversity=1)': {'feature_full': 0,
-# 	# 'genomic_summary':0,
-# 	'nearest_gene':'PIK3C3',
-# 	'nearest_gene_distance':847095.0},
-
-
-# 	'CutSite(chrom=chr2, strand=-, ref_pos=143961591, cut=143961595 diversity=3)': {'feature_full': 27,
-# 	# 'genomic_summary':1,
-# 	'nearest_gene':'GTDC1',
-# 	'nearest_gene_distance':0.0},
-
-
-# 	'CutSite(chrom=chr2, strand=-, ref_pos=184581387, cut=184581393 diversity=1)': {'feature_full': 0,
-# 	# 'genomic_summary':0,
-# 	'nearest_gene':'ZNF804A',
-# 	'nearest_gene_distance':17136.0},
-
-
-# 	'CutSite(chrom=chr3, strand=+, ref_pos=65866797, cut=65866815 diversity=1)': {'feature_full': 3,
-# 	# 'genomic_summary':1,
-# 	'nearest_gene':'MAGI1',
-# 	'nearest_gene_distance':0.0},
-
-
-# 	'CutSite(chrom=chr3, strand=+, ref_pos=138494328, cut=138494327 diversity=1)': {'feature_full': 0,
-# 	# 'genomic_summary':0,
-# 	'nearest_gene':'CEP70',
-# 	'nearest_gene_distance':17.0},
-
-
-# 	'CutSite(chrom=chr6, strand=-, ref_pos=100224884, cut=100224883 diversity=1)': {'feature_full': 0,
-# 	# 'genomic_summary':0,
-# 	'nearest_gene':'SIM1',
-# 	'nearest_gene_distance':160126.0},
-
-
-# 	'CutSite(chrom=chr6, strand=-, ref_pos=134850663, cut=134850667 diversity=1)': {'feature_full': 0,
-# 	# 'genomic_summary':0,
-# 	'nearest_gene':'ALDH8A1',
-# 	'nearest_gene_distance':66726.0},
-
-
-# 	'CutSite(chrom=chr7, strand=-, ref_pos=28169223, cut=28169228 diversity=1)': {'feature_full': 1,
-# 	# 'genomic_summary':1,
-# 	'nearest_gene':'JAZF1',
-# 	'nearest_gene_distance':0.0},
-
-
-# 	'CutSite(chrom=chr7, strand=-, ref_pos=115239484, cut=115239489 diversity=1)': {'feature_full': 0,
-# 	# 'genomic_summary':0,
-# 	'nearest_gene':'MDFIC',
-# 	'nearest_gene_distance':219573.0},
-
-
-# 	'CutSite(chrom=chr8, strand=+, ref_pos=6301238, cut=6301255 diversity=1)': {'feature_full': 0,
-# 	# 'genomic_summary':0,
-# 	'nearest_gene':'MCPH1',
-# 	'nearest_gene_distance':105372.0},
-
-
-# 	'CutSite(chrom=chr8, strand=+, ref_pos=28930554, cut=28930553 diversity=1)': {'feature_full': 16,
-# 	# 'genomic_summary':2,
-# 	'nearest_gene':'HMBOX1',
-# 	'nearest_gene_distance':0.0}
-# 	}
-
-# 	"""
-# 	pytest -sv tests/unit/test_StandardCuts.py::test_extract_in_refseq_feature
-# 	"""
-
-# 	standard_group = standard_group_1_ptprc_cut_sites
-
-# 	all_genomic_features = pd.read_csv(path_to_hg38_refseq)
-
-# 	df_feature = all_genomic_features.copy()
-
-# 	df_gene_names = df_feature.drop(columns = 'feature').groupby('name').agg({
-# 		'chrom': 'first',
-# 		'start': 'min',
-# 		'end': 'max',
-# 		'name2': 'first'
-# 		}).rename(
-# 	columns = {'name2': 'gene', 'goo':'ga'})
-
-# 	print('\n')
-
-# 	print('Multithreaded')
-# 	standard_group = standard_group_1_ptprc_cut_sites
-# 	standard_group.parallel_build_cut_site_alignment()
-# 	start = time.time()
-# 	standard_group.assign_features(all_features = all_genomic_features, gene_names = df_gene_names)
-# 	standard_group.build_cut_profile()
-# 	print(time.time()-start)
-# 	check_cut_site_correct(standard_group, expected_results)
 
 def test_profiles_to_df(standard_group_1_ptprc_cut_sites, retrieve_feature_input):
 	"""
@@ -700,7 +576,7 @@ def test_profiles_to_df(standard_group_1_ptprc_cut_sites, retrieve_feature_input
 	standard_group.cut_profiles_to_df()
 	# print(standard_group.df_cut_profiles)
 	# print(standard_group.df_cut_profiles.columns)
-	assert standard_group.df_cut_profiles.shape == (15, 33)
+	assert standard_group.df_cut_profiles.shape == (15, 34)
 	print(time.time()-start)
 
 def test_profiles_to_df_without_features(standard_group_1_ptprc_cut_sites):
@@ -723,7 +599,7 @@ def test_profiles_to_df_without_features(standard_group_1_ptprc_cut_sites):
 	standard_group.cut_profiles_to_df()
 	print(standard_group.df_cut_profiles)
 	print(standard_group.df_cut_profiles.columns)
-	# assert standard_group.df_cut_profiles.shape == (15, 33)
+	assert standard_group.df_cut_profiles.shape == (15, 28)
 	print(time.time()-start)
 
 def test_cut_detail_to_df(standard_group_1_ptprc_cut_sites, path_to_hg38_refseq):

@@ -104,8 +104,6 @@ def main():
 	parser.add_argument("--group_samplesheet_path", help="Path to the sample sheet CSV.")
 	parser.add_argument("--output_dir", default="CRISPRito_output", help="Directory to save output CSV.")
 	parser.add_argument("--genome_path", required=True, help="Path to the gzipped genome FASTA")
-	# parser.add_argument("--feature_path", required=True, help="Path to the features CSV file.")
-	# parser.add_argument("--gene_names_path", required=True, help="Path to the gene names CSV file.")
 	parser.add_argument("--flank_size", type=int, default=30, help="Flank size around cut sites.")
 	parser.add_argument("--sgRNA", type=str, default="", help="sgRNA sequence (optional).")
 	parser.add_argument("--PAM_alignment", type=str, default="-GG", help="PAM sequence for alignment.")
@@ -118,8 +116,6 @@ def main():
 		group_samplesheet_path=args.group_samplesheet_path,
 		output_dir=args.output_dir,
 		genome_path=args.genome_path,
-		# feature_path=args.feature_path,
-		# gene_names_path=args.gene_names_path,
 		flank_size=args.flank_size,
 		sgRNA=args.sgRNA,
 		PAM_alignment=args.PAM_alignment,

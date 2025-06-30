@@ -2,6 +2,7 @@ import pytest
 import os
 from os.path import join as pjoin
 from unittest import mock
+import pathlib
 from CRISPRito.SetupRun import setup_run
 import pandas as pd
 
@@ -16,8 +17,7 @@ def test_setup_run(
 	mock_to_csv,
 	project_test_data_directory,
 	path_to_hg38_genome,
-	path_to_hg38_refseq,
-	path_to_hg38_gene_names
+	path_to_feature_table
 	):
 	"""
 	pytest -sv tests/unit/test_SetupRun.py::test_setup_run
@@ -29,8 +29,7 @@ def test_setup_run(
 		sample_sheet_path = pjoin(project_test_data_directory, 'input_samplesheet_ptprc_reduced.csv'),
 		output_dir = 'dummy_output',
 		genome_path = path_to_hg38_genome,
-		feature_path = path_to_hg38_refseq,
-		gene_names_path = path_to_hg38_gene_names,
+		feature_table_path = path_to_feature_table,
 		overwrite_output_dir = True)
 
 	mock_manage_dir.assert_called_once()
