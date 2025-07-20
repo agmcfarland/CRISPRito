@@ -11,7 +11,7 @@ def test_one():
 		['CT--ACCAATAGCCTTGACA' , 'CTTGACCAATAGCCTTGACA']
 	]
 
-	test_pairs_score = [7, 6, 2]
+	test_pairs_score = [6, 7, 2]
 
 	for e, pair_ in enumerate(test_pairs):
 

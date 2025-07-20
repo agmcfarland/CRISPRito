@@ -426,6 +426,8 @@ class CutSite:
 
 				self.alignment['aligned_gRNA_gaps'] = self.alignment['aligned_gRNA'].count('-')
 
+				self.alignment['lev_distance'] = -1 # filler in case there is no alignment tolerance
+
 				if self.alignment['alignment_length'] in self.sgRNA_alignment_tolerance[seqname]:
 					# print('LOOK AT ME 1', self.cut_region['start'])
 

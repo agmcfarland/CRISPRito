@@ -578,6 +578,7 @@ def test_profiles_to_df(standard_group_1_ptprc_cut_sites, retrieve_feature_input
 	# print(standard_group.df_cut_profiles.columns)
 	assert standard_group.df_cut_profiles.shape == (15, 34)
 	print(time.time()-start)
+	print(standard_group.df_cut_profiles.lev_distance)
 
 def test_profiles_to_df_without_features(standard_group_1_ptprc_cut_sites):
 	"""

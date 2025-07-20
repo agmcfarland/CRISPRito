@@ -4,6 +4,7 @@ from os.path import join as pjoin
 import pandas as pd
 from CRISPRito.StandardCuts import StandardCuts
 from CRISPRito.FeatureManager import FeatureManager
+from CRISPRito.StandardCutRank import StandardCutRank
 
 def process_group(
 	group_samplesheet_path,
@@ -87,6 +88,12 @@ def process_group(
 	standard_group.id_counts.to_csv(pjoin(output_path, f'{standard_group.cluster_group}_group_id_counts.csv'), index = None)
 
 	standard_group.df_cut_detail.to_csv(pjoin(output_path, f'{standard_group.cluster_group}_group_id_cut_detail.csv'), index = None)
+
+	standard_rank = StandardCutRank()
+
+	standard_rank.generate_ranking_skeleton(sample_sheet = df_group_samplesheet, feature_manager = feature_manager)
+
+	standard_rank.df_skeleton.to_csv(pjoin(output_path, f'{standard_group.cluster_group}_group_id_rank_weight_skeleton.csv'), index = None)
 
 	# Update this
 

@@ -59,9 +59,10 @@ def test_process_group_1(
 			feature_table_path=input_featuresheet_path
 		)
 
-		assert mock_to_csv.call_count == 4
+		assert mock_to_csv.call_count == 5
 		filepaths = [call.args[0] for call in mock_to_csv.call_args_list]
 		assert any('1_group_cut_profiles' in path for path in filepaths)
 		assert any('1_group_method_counts' in path for path in filepaths)
 		assert any('1_group_id_counts' in path for path in filepaths)
+		assert any('1_group_id_rank_weight_skeleton' in path for path in filepaths)
 
