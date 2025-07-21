@@ -98,3 +98,23 @@ def test_generate_ranking_skeleton(load_1_group_samplesheet_ptprc, mock_registry
 	assert sc.df_skeleton.shape == (26, 6)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

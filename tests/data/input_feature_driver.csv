@@ -1,0 +1,5 @@
+﻿feature,type,file_path
+gene,annotation,crisprito_gene.csv
+exon,presence_absence,crisprito_exon.csv
+intron,presence_absence,crisprito_intron.csv
+oncogene,annotation,crisprito_oncogene.csv

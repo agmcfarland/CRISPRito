@@ -13,10 +13,15 @@ class RankOperator:
 
 class StandardCutRank:
 
-	def __init__(self, ranking_criteria = None):
-	    if ranking_criteria is None:
-	        ranking_criteria = []
-	    self.ranking_criteria = ranking_criteria
+	def __init__(self, ranking_criteria = None, rank_table_weights = None, cut_sites, cut_sites_detail):
+		if ranking_criteria is None:
+			ranking_criteria = []
+		self.ranking_criteria = ranking_criteria
+
+		self.rank_table_weights = rank_table_weights
+
+	def score_presence_variables(self):
+		pass
 
 
 	def generate_ranking_skeleton(self, sample_sheet, feature_manager=None):
@@ -64,7 +69,7 @@ class StandardCutRank:
 
 	def load_user_sample_rank_list(self, sample_sheet):
 		for _, row in sample_sheet.iterrows():
-			self.ranking_criteria.append([row['sample'], 'overlap', '>=', 50, 4, 'user'])
+			self.ranking_criteria.append([row['sample'], 'presence', '==', 1, 0, 'user'])
 
 
 	def load_user_method_rank_list(self, sample_sheet):

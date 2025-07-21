@@ -1,0 +1,7 @@
+﻿sample,method,measurement_type,standard_format_file_path,cluster_group,id
+comp_sample1,computational,abundance,fakepath.csv,1,comp_sample1
+comp_sample2,computational,abundance,fakepath.csv,1,comp_sample2
+comp_sample3,computational,abundance,fakepath.csv,1,comp_sample3
+bio_sample4,biochemical,abundance,fakepath.csv,1,bio_sample4
+bio_sample5,biochemical,abundance,fakepath.csv,1,bio_sample5
+bio_sample6,biochemical,abundance,fakepath.csv,1,bio_sample6
