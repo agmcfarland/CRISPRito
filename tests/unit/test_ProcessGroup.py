@@ -15,7 +15,7 @@ def load_1_group_samplesheet_ptprc(project_test_data_directory):
 
 def side_effect_read_csv_factory(path_to_df_map):
 	
-	real_read_csv = __import__('pandas').read_csv # Unmocked read_csv straight from pandas module
+	real_read_csv = __import__('pandas').read_csv 
 
 	def _side_effect_read_csv(path, *args, **kwargs):
 		if path in path_to_df_map:

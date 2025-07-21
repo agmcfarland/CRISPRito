@@ -102,4 +102,20 @@ def example_hg38_genome_size(scope = 'session', autouse = True):
 		}
 
 
+@pytest.fixture
+def ranking_inputs(scope = 'session', autouse = True):
+	"""
+	"""
+	return {
+		'cut_profiles': pjoin(pathlib.Path(__file__).parent, "data", 'ranksites_cut_profiles.csv'),
+		'id_counts': pjoin(pathlib.Path(__file__).parent, "data", 'ranksites_id_counts.csv'),
+		'method_counts': pjoin(pathlib.Path(__file__).parent, "data", 'ranksites_method_counts.csv'),
+		'samplesheet': pjoin(pathlib.Path(__file__).parent, "data", 'ranksites_group_samplesheet.csv'),
+		'weight_skeleton': pjoin(pathlib.Path(__file__).parent, "data", 'ranksites_rank_weight_skeleton.csv')
+	}
+
+
+
+
+
 
