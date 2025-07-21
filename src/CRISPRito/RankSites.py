@@ -30,7 +30,6 @@ def rank_sites(
 	if method_counts_path is not None:
 		df_method_counts = pd.read_csv(method_counts_path)
 
-
 	sc_ranks = StandardCutRank(
 		rank_table_weights = df_rank_table_weights,
 		cut_profiles = df_cut_profiles,

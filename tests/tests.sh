@@ -6,6 +6,8 @@ python -m pytest --disable-warnings -sv tests
 
 pytest -sv tests/unit/test_StandardCutRank.py
 
+pytest -sv tests/unit/test_RankSites.py
+
 python -m pytest --disable-warnings -sv /data/CRISPRito/tests/unit/test_RunParameters.py
 
 python -m pytest -sv tests/unit/test_FeatureManager.py
