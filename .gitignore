@@ -4,3 +4,4 @@
 sftp-config.json
 /scratch
 /tests/temp
+tests/data/ranksites_rank_weight_skeleton_old.csv

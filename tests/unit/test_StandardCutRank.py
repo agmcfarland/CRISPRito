@@ -29,7 +29,7 @@ def mock_registry():
 
 def generate_feature_table(mock_registry):
 	"""
-	pytest -sv tests/unit/test_StandardCutRank.py::test_feature_manager_with_mock_registry
+	Helper function
 	"""
 	mock_df = pd.DataFrame()  # Not used since we're patching
 
@@ -45,7 +45,9 @@ def test_load_default_rank_list():
 	"""
 	sc = StandardCutRank()
 	sc.load_default_rank_list()
-	assert len(sc.ranking_criteria) == 17
+	assert len(sc.ranking_criteria) == 16
+	for i in sc.ranking_criteria:
+		assert len(i) == 8
 
 def test_load_user_sample_rank_list(load_1_group_samplesheet_ptprc):
 	"""
@@ -55,7 +57,8 @@ def test_load_user_sample_rank_list(load_1_group_samplesheet_ptprc):
 	sc.load_user_sample_rank_list(load_1_group_samplesheet_ptprc)
 	print(sc.ranking_criteria)
 	assert len(sc.ranking_criteria) == 3
-
+	for i in sc.ranking_criteria:
+		assert len(i) == 8
 
 def test_load_user_feature_rank_list(mock_registry):
 	"""
@@ -66,7 +69,8 @@ def test_load_user_feature_rank_list(mock_registry):
 	sc = StandardCutRank()
 	sc.load_user_feature_rank_list(feature_manager)
 	assert len(sc.ranking_criteria) == 3
-
+	for i in sc.ranking_criteria:
+		assert len(i) == 8
 
 def test_load_user_sample_rank_list(load_1_group_samplesheet_ptprc):
 	"""
@@ -76,7 +80,8 @@ def test_load_user_sample_rank_list(load_1_group_samplesheet_ptprc):
 	sc.load_user_sample_rank_list(load_1_group_samplesheet_ptprc)
 	print(sc.ranking_criteria)
 	assert len(sc.ranking_criteria) == 3
-
+	for i in sc.ranking_criteria:
+		assert len(i) == 8
 
 def test_load_user_method_rank_list(load_1_group_samplesheet_ptprc):
 	"""
@@ -85,6 +90,8 @@ def test_load_user_method_rank_list(load_1_group_samplesheet_ptprc):
 	sc = StandardCutRank()
 	sc.load_user_method_rank_list(load_1_group_samplesheet_ptprc)
 	assert len(sc.ranking_criteria) == 3
+	for i in sc.ranking_criteria:
+		assert len(i) == 8
 
 
 def test_generate_ranking_skeleton(load_1_group_samplesheet_ptprc, mock_registry):
@@ -94,8 +101,8 @@ def test_generate_ranking_skeleton(load_1_group_samplesheet_ptprc, mock_registry
 	feature_manager = generate_feature_table(mock_registry)
 	sc = StandardCutRank()
 	sc.generate_ranking_skeleton(sample_sheet = load_1_group_samplesheet_ptprc, feature_manager = feature_manager)
-	assert len(sc.ranking_criteria) == 26
-	assert sc.df_skeleton.shape == (26, 7)
+	assert len(sc.ranking_criteria) == 25
+	assert sc.df_skeleton.shape == (25, 8)
 
 
 def test_input_dataframes_to_standardcutrank(ranking_inputs):
@@ -141,6 +148,9 @@ def test_load_rank_from_table_row(ranking_inputs):
 def test_temp_1(ranking_inputs):
 	"""
 	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_1
+
+	Testing that the score_criteria() method for feature works
+	Testing that the upper and lower limit works
 	"""
 
 	sc = StandardCutRank(
@@ -151,23 +161,34 @@ def test_temp_1(ranking_inputs):
 		samplesheet=pd.read_csv(ranking_inputs['samplesheet'])
 		)
 
-	# print(sc.datasets)
+	sc.datasets['cut_profiles']['zscore_mean'] = [100, 90, 80, 10, 1, 2, 3, 4, -0.5, -1]
+
+	# print(sc.datasets['cut_profiles']['zscore_mean'])
+	# return
 
 	# print(df)
 	for e, row in sc.rank_table_weights.iterrows():
 		if e == 1:
-			rank_criteria = RankOperator.load_from_rank_table_row(row)
-			# print(rank_criteria.__dict__)
-			print(rank_criteria.score)
-			rank_criteria.score_criteria(datasets = sc.datasets)
-			print(rank_criteria.score)
 			break
-		pass
+	# print(row)
+	rank_criteria = RankOperator.load_from_rank_table_row(row)
+	rank_criteria.score_criteria(datasets = sc.datasets)
+	# print(rank_criteria.score)
+	assert rank_criteria.score['rank_criteria_1'].tolist() == [2, 2, 2, 2, 0, 2, 2, 2, 0, 0]
+	
+	print(row)
+	row.upper_threshold = 10
+	rank_criteria = RankOperator.load_from_rank_table_row(row)
+	rank_criteria.score_criteria(datasets = sc.datasets)
+	print(rank_criteria.score)
+	assert rank_criteria.score['rank_criteria_1'].tolist() == [0, 0, 0, 2, 0, 2, 2, 2, 0, 0]
+
 
 
 def test_temp_2(ranking_inputs):
 	"""
 	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_2
+	test overlap on the df_cut_sites df works
 	"""
 
 	sc = StandardCutRank(
@@ -183,12 +204,23 @@ def test_temp_2(ranking_inputs):
 	# print(df)
 	for e, row in sc.rank_table_weights.iterrows():
 		if e == 0:
-			rank_criteria = RankOperator.load_from_rank_table_row(row)
-			# print(rank_criteria.score)
-			rank_criteria.score_criteria(datasets = sc.datasets)
-			print(rank_criteria.score)
 			break
-		pass
+	rank_criteria = RankOperator.load_from_rank_table_row(row)
+	rank_criteria.score_criteria(datasets = sc.datasets)
+	print(rank_criteria.score)
+	assert rank_criteria.score['rank_criteria_0'].tolist() == [1, 1, 1, 1, 1, 1, 0, 0, 0, 0]
+
+	print(row)
+	row2 = row
+	row2.upper_threshold = 90.0
+	print(row2)
+
+	rank_criteria2 = RankOperator.load_from_rank_table_row(row2)
+	# print(rank_criteria.__dict__)
+	rank_criteria2.score_criteria(datasets = sc.datasets)
+	print(rank_criteria2.score)
+	assert rank_criteria2.score['rank_criteria_0'].tolist() == [0, 0, 0, 1, 1, 1, 0, 0, 0, 0]
+
 
 def test_temp_3(ranking_inputs):
 	"""
@@ -207,20 +239,21 @@ def test_temp_3(ranking_inputs):
 
 	# print(df)
 	for e, row in sc.rank_table_weights.iterrows():
-		if e == 17:
-			# print(row)
-			# break
-			rank_criteria = RankOperator.load_from_rank_table_row(row)
-			# print(rank_criteria.score)
-			rank_criteria.score_criteria(datasets = sc.datasets)
-			print(rank_criteria.score)
+		if e == 15:
 			break
-		pass
+	print(row)
+	# return
+	rank_criteria = RankOperator.load_from_rank_table_row(row)
+	rank_criteria.score_criteria(datasets = sc.datasets)
+	print(rank_criteria.score)
+	assert rank_criteria.score['rank_criteria_15'].tolist() == [2, 2, 2, 2, 2, 2, 2, 2, 0, 2]
+
 
 
 def test_temp_4(ranking_inputs):
 	"""
 	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_4
+	nearest_gene_distance 1-1000
 	"""
 
 	sc = StandardCutRank(
@@ -244,10 +277,12 @@ def test_temp_4(ranking_inputs):
 			print(rank_criteria.score)
 			break
 		pass
+	assert rank_criteria.score['rank_criteria_25'].tolist() == [0, 1, 1, 0, 0 ,0 ,0 ,0, 1 ,1]
 
 def test_temp_5(ranking_inputs):
 	"""
 	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_5
+	Overlap of method (biochemical)
 	"""
 
 	sc = StandardCutRank(
@@ -271,11 +306,13 @@ def test_temp_5(ranking_inputs):
 			print(rank_criteria.score)
 			break
 		pass
+	assert rank_criteria.score['rank_criteria_23'].tolist() == [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
 
 
 def test_temp_6(ranking_inputs):
 	"""
 	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_6
+	Testing biosample5
 	"""
 
 	sc = StandardCutRank(
@@ -290,7 +327,7 @@ def test_temp_6(ranking_inputs):
 
 	# print(df)
 	for e, row in sc.rank_table_weights.iterrows():
-		if e == 24:
+		if e == 20:
 			print(row)
 			# break
 			rank_criteria = RankOperator.load_from_rank_table_row(row)
@@ -299,6 +336,7 @@ def test_temp_6(ranking_inputs):
 			print(rank_criteria.score)
 			break
 		pass
+	assert rank_criteria.score['rank_criteria_20'].tolist() == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 def test_temp_7(ranking_inputs):
 	"""
@@ -317,15 +355,16 @@ def test_temp_7(ranking_inputs):
 
 	# print(df)
 	for e, row in sc.rank_table_weights.iterrows():
-		if e == 30:
+		if e == 28:
 			print(row)
 			# break
 			rank_criteria = RankOperator.load_from_rank_table_row(row)
-			# print(rank_criteria.score)
+			print(rank_criteria.score)
 			rank_criteria.score_criteria(datasets = sc.datasets)
 			print(rank_criteria.score)
 			break
 		pass
+	assert rank_criteria.score['rank_criteria_28'].tolist() == [2, 2, 0, 0, 0, 2, 0, 0, 0, 0]
 
 def test_temp_go_through_all(ranking_inputs):
 	"""
@@ -362,7 +401,7 @@ def test_get_score_from_rank_table(ranking_inputs):
 
 def test_tally_cut_cluster_scores(ranking_inputs):
 	"""
-	pytest -sv tests/unit/test_StandardCutRank.py::tally_cut_cluster_scores
+	pytest -sv tests/unit/test_StandardCutRank.py::test_tally_cut_cluster_scores
 	"""
 
 	sc = StandardCutRank(
@@ -377,9 +416,11 @@ def test_tally_cut_cluster_scores(ranking_inputs):
 
 	sc.tally_cut_cluster_scores()
 
-	assert sc.cut_cluster_scores.shape == (10, 33)
+	print(sc.cut_cluster_scores['total_score'])
 
+	assert sc.cut_cluster_scores.shape == (10, 32)
 
+	assert sc.cut_cluster_scores['total_score'].tolist() == [20.5, 17.5,16.5,12.0,12.0,15.5,10.5,13.5,2.0,4.0]
 
 
 

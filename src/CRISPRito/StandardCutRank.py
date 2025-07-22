@@ -4,11 +4,12 @@ import operator
 class RankOperator:
 
 
-	def __init__(self, variable, variable_type, condition, outcome, weight, source, type, rank_criteria_id):
+	def __init__(self, variable, variable_type, condition, lower_threshold, upper_threshold, weight, source, type, rank_criteria_id):
 		self.variable = variable
 		self.variable_type = variable_type
 		self.condition = condition
-		self.outcome = outcome
+		self.lower_threshold = lower_threshold
+		self.upper_threshold = upper_threshold
 		self.weight = weight
 		self.source = source
 		self.type = type
@@ -29,13 +30,42 @@ class RankOperator:
 		return cls(
 			variable=row['variable'],
 			variable_type=row['variable_type'],
-			condition=row['condition'],  # or row['modifier'] if using older naming
-			outcome=row['outcome'],
-			weight=row['weight'],
 			source=row['source'],
+			condition=row['condition'],
+			lower_threshold=row['lower_threshold'],
+			upper_threshold=row['upper_threshold'],
+			weight=row['weight'],
 			type=row['type'],
 			rank_criteria_id = row['rank_criteria_id']
 		)
+
+	def apply_scoring_weights(self, df):
+		"""
+		Apply scoring weights to a DataFrame based on a specified variable, condition, and thresholds.
+
+		For each value in the specified variable column, assigns a weight if the value satisfies:
+		- A condition (e.g., >=, <=, ==) relative to a lower threshold, and
+		- Is less than or equal to the upper threshold.
+
+		The result is stored in a new column identified by `self.rank_criteria_id`.
+
+		Parameters:
+		----------
+		df : pandas.DataFrame
+			The input DataFrame containing the variable to score.
+
+		Returns:
+		-------
+		pandas.DataFrame
+			The updated DataFrame with a new column of scores.
+		"""
+		df[self.rank_criteria_id] = df[self.variable].apply(
+			lambda x: self.weight if (
+				self.condition_map[self.condition](x, self.lower_threshold) and x <= self.upper_threshold
+				) else 0
+			)
+		return df
+
 
 	def score_criteria(self, datasets):
 
@@ -45,7 +75,7 @@ class RankOperator:
 
 				df = datasets['cut_profiles'].copy()
 
-				df[self.rank_criteria_id] = df[self.variable].apply(lambda x: self.weight if self.condition_map[self.condition](x, self.outcome) else 0)
+				df = self.apply_scoring_weights(df = df)
 
 				self.score = df[['cut_cluster', self.rank_criteria_id, self.variable]]
 
@@ -58,11 +88,11 @@ class RankOperator:
 
 					max_samples = datasets['samplesheet'].shape[0]
 
-					df = datasets['cut_profiles']
+					df = datasets['cut_profiles'].copy()
 
 					df[self.variable] = 100 * (df[self.variable]/max_samples)
 
-					df[self.rank_criteria_id] = df[self.variable].apply(lambda x: self.weight if self.condition_map[self.condition](x, self.outcome) else 0)
+					df = self.apply_scoring_weights(df = df)
 
 					self.score = df[['cut_cluster', self.rank_criteria_id, self.variable]]
 
@@ -76,7 +106,7 @@ class RankOperator:
 
 				df[self.variable] = df['detected']
 
-				df[self.rank_criteria_id] = df[self.variable].apply(lambda x: self.weight if self.condition_map[self.condition](x, self.outcome) else 0)
+				df = self.apply_scoring_weights(df = df)
 
 				self.score = df[['cut_cluster', self.rank_criteria_id, self.variable]]
 
@@ -92,7 +122,7 @@ class RankOperator:
 
 				df[self.variable] = 100 * (df['detected']/max_samples)
 
-				df[self.rank_criteria_id] = df[self.variable].apply(lambda x: self.weight if self.condition_map[self.condition](x, self.outcome) else 0)
+				df = self.apply_scoring_weights(df = df)
 
 				self.score = df[['cut_cluster', self.rank_criteria_id, self.variable]]
 
@@ -161,49 +191,57 @@ class StandardCutRank:
 			self.load_user_feature_rank_list(feature_manager = feature_manager)
 
 		self.df_skeleton = pd.DataFrame(self.ranking_criteria)
-		self.df_skeleton.columns = ['variable', 'variable_type', 'condition', 'outcome', 'weight', 'source', 'type']
-		self.df_skeleton = self.df_skeleton[['variable', 'variable_type', 'source', 'type', 'condition', 'outcome', 'weight']]
+		self.df_skeleton.columns = ['variable',	'variable_type',	'source',	'type',	'condition',	'lower_threshold',	'upper_threshold',	'weight']
+		# self.df_skeleton.columns = ['variable', 'variable_type', 'condition', 'outcome', 'weight', 'source', 'type']
+		# self.df_skeleton = self.df_skeleton[['variable', 'variable_type', 'source', 'type', 'condition', 'outcome', 'weight']]
 
 	def load_default_rank_list(self):
+		# variable, variable_type, source, type, condition, lower_threshold, upper_threshold, weight
 		self.ranking_criteria =	[
-				['overlap',	'overlap',	'>=',	50,	1,	'default', 'feature'],
-				['zscore_mean',	'presence',	'>=',	1.5,	2,	'default', 'feature'],
-				['zscore_min',	'presence',	'>=',	1.5,	0,	'default', 'feature'],
-				['zscore_max',	'presence',	'>=',	1.5,	0,	'default', 'feature'],
-				['zscore_median',	'presence',	'>=',	1.5,	0,	'default', 'feature'],
-				['min_max_mean',	'presence',	'>=',	1,	0,	'default', 'feature'],
-				['min_max_min',	'presence',	'>=',	1,	0,	'default', 'feature'],
-				['min_max_max',	'presence',	'>=',	1,	0,	'default', 'feature'],
-				['min_max_median',	'presence',	'>=',	1,	0,	'default', 'feature'],
-				['local_rank_mean',	'presence',	'>=',	1,	0,	'default', 'feature'],
-				['local_rank_min',	'presence',	'>=',	1,	0,	'default', 'feature'],
-				['local_rank_max',	'presence',	'>=',	1,	0,	'default', 'feature'],
-				['local_rank_median',	'presence',	'>=',	1,	0,	'default', 'feature'],
-				['lev_distance',	'distance',	'<=',	3,	5,	'default', 'feature'],
-				['lev_distance',	'distance',	'<=',	7,	3,	'default', 'feature'],
-				['alignment_length',	'distance',	'>=',	17,	2,	'default', 'feature'],
-				['alignment_length',	'distance',	'<=',	22,	2,	'default', 'feature']
-				]
+			['overlap',	'overlap',	'default',	'feature',				'>=',	50,	100,	1],
+			['zscore_mean',	'presence',	'default',	'feature',			'>=',	1.5,	float('inf'),	2],
+			['zscore_min',	'presence',	'default',	'feature',			'>=',	1.5,	float('inf'),	0],
+			['zscore_max',	'presence',	'default',	'feature',			'>=',	1.5,	float('inf'),	0],
+			['zscore_median',	'presence',	'default',	'feature',		'>=',	1.5,	float('inf'),	0],
+			['min_max_mean',	'presence',	'default',	'feature',		'>=',	1,	float('inf'),	0],
+			['min_max_min',	'presence',	'default',	'feature',			'>=',	1,	float('inf'),	0],
+			['min_max_max',	'presence',	'default',	'feature',			'>=',	1,	float('inf'),	0],
+			['min_max_median',	'presence',	'default',	'feature',		'>=',	1,	float('inf'),	0],
+			['local_rank_mean',	'presence',	'default',	'feature',		'>=',	1,	float('inf'),	0],
+			['local_rank_min',	'presence',	'default',	'feature',		'>=',	1,	float('inf'),	0],
+			['local_rank_max',	'presence',	'default',	'feature',		'>=',	1,	float('inf'),	0],
+			['local_rank_median',	'presence',	'default',	'feature',	'>=',	1,	float('inf'),	0],
+			['lev_distance',	'distance',	'default',	'feature',		'>=',	0,	3,	5],
+			['lev_distance',	'distance',	'default',	'feature',		'>=',	4,	7,	3],
+			['alignment_length',	'distance',	'default',	'feature',	'>=',	17,	22,	2]
+			]
 
 	def load_user_feature_rank_list(self, feature_manager):
 		"""
+		# variable, variable_type, source, type, condition, lower_threshold, upper_threshold, weight
 		"""
 		for feature_, info_ in feature_manager.registry.items():
 			if info_['type'] == 'presence_absence':
-				self.ranking_criteria.append([f'in_{feature_}', 'presence', '==', 1, 2, 'user', 'feature'])
+				self.ranking_criteria.append([f'in_{feature_}', 'presence', 'user', 'feature', '==', 1, 1, 2])
 
 			if info_['type'] == 'annotation':
-				self.ranking_criteria.append([f'nearest_{feature_}_distance', 'distance', '==', 0, 2, 'user', 'feature'])
-				self.ranking_criteria.append([f'nearest_{feature_}_distance', 'distance', '<=', 1000, 1, 'user', 'feature'])
+				self.ranking_criteria.append([f'nearest_{feature_}_distance', 'distance', 'user', 'feature', '==', 0, 0, 2])
+				self.ranking_criteria.append([f'nearest_{feature_}_distance', 'distance', 'user', 'feature', '>=', 1, 1000, 1])
 
 	def load_user_sample_rank_list(self, sample_sheet):
+		# variable, variable_type, source, type, condition, lower_threshold, upper_threshold, weight
+		type = 'sample'
+		variable_type = 'presence'
 		for _, row in sample_sheet.iterrows():
-			self.ranking_criteria.append([row['sample'], 'presence', '==', 1, 0, 'user', 'sample'])
+			self.ranking_criteria.append([row[type], variable_type, 'user', type, '==', 1, 1, 0])
 
 
 	def load_user_method_rank_list(self, sample_sheet):
+		# variable, variable_type, source, type, condition, lower_threshold, upper_threshold, weight
+		type = 'method'
+		variable_type = 'overlap'
 		for method_ in sample_sheet['method'].drop_duplicates().tolist():
-			self.ranking_criteria.append([method_, 'overlap', '>=', 50, 4, 'user', 'method'])
+			self.ranking_criteria.append([method_, variable_type, 'user', type, '==', 1, 1, 0])
 
 
 
