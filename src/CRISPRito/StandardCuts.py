@@ -507,7 +507,7 @@ class CutSite:
 
 			self.features[f'nearest_{name}'] = 'not_detected'
 
-			self.features[f'nearest_{name}_distance'] = 0
+			self.features[f'nearest_{name}_distance'] = -1
 
 
 	def build_simple_cut_profile(self):
