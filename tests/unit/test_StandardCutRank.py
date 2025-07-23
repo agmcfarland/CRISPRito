@@ -297,7 +297,7 @@ def test_temp_5(ranking_inputs):
 
 	# print(df)
 	for e, row in sc.rank_table_weights.iterrows():
-		if e == 23:
+		if e == 22:
 			print(row)
 			# break
 			rank_criteria = RankOperator.load_from_rank_table_row(row)
@@ -306,7 +306,7 @@ def test_temp_5(ranking_inputs):
 			print(rank_criteria.score)
 			break
 		pass
-	assert rank_criteria.score['rank_criteria_23'].tolist() == [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
+	assert rank_criteria.score['rank_criteria_22'].tolist() == [2, 2, 2, 2, 2, 2, 2, 0, 0, 0]
 
 
 def test_temp_6(ranking_inputs):
@@ -366,6 +366,38 @@ def test_temp_7(ranking_inputs):
 		pass
 	assert rank_criteria.score['rank_criteria_28'].tolist() == [2, 2, 0, 0, 0, 2, 0, 0, 0, 0]
 
+def test_temp_8(ranking_inputs):
+	"""
+	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_8
+	overlap method biochemical
+	"""
+
+	sc = StandardCutRank(
+		rank_table_weights=pd.read_csv(ranking_inputs['weight_skeleton']),
+		cut_profiles=pd.read_csv(ranking_inputs['cut_profiles']),
+		id_counts=pd.read_csv(ranking_inputs['id_counts']),
+		method_counts=pd.read_csv(ranking_inputs['method_counts']),
+		samplesheet=pd.read_csv(ranking_inputs['samplesheet'])
+		)
+
+	# print(sc.datasets)
+
+	# print(df)
+	for e, row in sc.rank_table_weights.iterrows():
+		if e == 23:
+			print(row)
+			# return
+			# break
+			rank_criteria = RankOperator.load_from_rank_table_row(row)
+			print(rank_criteria.score)
+			rank_criteria.score_criteria(datasets = sc.datasets)
+			print(rank_criteria.score)
+			break
+		pass
+	# return
+	assert rank_criteria.score['rank_criteria_23'].tolist() == [1,1,1,1,1,1, 0 ,0 ,1 ,0]
+
+
 def test_temp_go_through_all(ranking_inputs):
 	"""
 	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_go_through_all
@@ -420,7 +452,11 @@ def test_tally_cut_cluster_scores(ranking_inputs):
 
 	assert sc.cut_cluster_scores.shape == (10, 32)
 
-	assert sc.cut_cluster_scores['total_score'].tolist() == [20.5, 17.5,16.5,12.0,12.0,15.5,10.5,13.5,2.0,4.0]
+	print(sc.cut_cluster_scores[['cut_cluster','rank_criteria_0']])
+
+	# return
+
+	assert sc.cut_cluster_scores['total_score'].tolist() == [20.5,17.5,16.5,14.0,14.0,18.5,12.5,13.5,3.0,4.0]
 
 
 

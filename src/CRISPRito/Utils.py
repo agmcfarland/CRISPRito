@@ -1,3 +1,5 @@
+import logging
+import sys
 import time
 import gzip
 import numpy as np
@@ -9,6 +11,37 @@ from skbio.alignment import global_pairwise_align_nucleotide
 from scipy.stats import zscore
 from sklearn.preprocessing import MinMaxScaler
 import pyranges as pr
+
+
+def setup_logging(log_path):
+	log_formatter = logging.Formatter('%(asctime)s — %(levelname)s — %(message)s')
+
+	root_logger = logging.getLogger()
+	root_logger.setLevel(logging.INFO)
+
+	file_handler = logging.FileHandler(log_path)
+	file_handler.setFormatter(log_formatter)
+	root_logger.addHandler(file_handler)
+
+	console_handler = logging.StreamHandler(sys.stdout)
+	console_handler.setFormatter(log_formatter)
+	root_logger.addHandler(console_handler)
+
+	# Redirect stdout and stderr to logging
+	class StreamToLogger:
+		def __init__(self, logger, level):
+			self.logger = logger
+			self.level = level
+
+		def write(self, message):
+			if message.strip():  # avoid empty messages
+				self.logger.log(self.level, message.strip())
+
+		def flush(self):
+			pass
+
+	sys.stdout = StreamToLogger(root_logger, logging.INFO)
+	sys.stderr = StreamToLogger(root_logger, logging.ERROR)
 
 def alignment_levenshtein(observed, reference):
     """
@@ -248,98 +281,3 @@ def sliding_windows(seq_length, window_size, step_size):
 		end = start + window_size
 		windows.append((start, end))
 	return windows
-
-
-# # def extract_annotations(df, position):
-# # 	return df[(df['start'] <= position) & (df['end'] >= position)]
-
-
-# def slice_annotation(gr, chromosome, position, tolerance=3_000_000):
-# 	"""
-# 	Slice a PyRanges object to a nearby window.
-# 	"""
-# 	gr_chr = gr[gr.Chromosome == chromosome] 
-# 	gr_chr = gr_chr[position - tolerance: position + tolerance]
-# 	return gr_chr
-
-
-# def extract_annotations(gr, chromosome, position):
-# 	"""Return all rows where the cut site overlaps a genomic feature."""
-# 	site = pr.from_dict({
-# 		"Chromosome": [chromosome],
-# 		"Start": [position],
-# 		"End": [position]
-# 	})
-
-# 	return gr.overlap(site).df
-
-# def get_closest_annotation(gr, chromosome, position, column_name="name2"):
-# 	"""Find nearest annotation and its distance."""
-# 	site = pr.from_dict({
-# 		"Chromosome": [chromosome],
-# 		"Start": [position],
-# 		"End": [position]
-# 	})
-
-# 	nearest = site.k_nearest(gr, k = 1)
-
-# 	return nearest.df[column_name].values[0], abs(nearest.df["Distance"].values[0])
-
-
-
-
-# def batch_overlaps(gr, sites_gr):
-# 	return sites_gr.join(gr).df
-
-# def batch_nearest_feature(gr, sites_gr):
-# 	return sites_gr.nearest(gr, overlap = True).df
-# 	# return gr.k_nearest(sites_gr, overlap = True, k = 1).df
-
-
-# 	if len(overlaps) > 0:
-# 		result = overlaps
-# 	else:
-# 		# Step 2: Get closest if no overlaps
-# 		# result = sites_gr.k_nearest(gr, k=1)
-# 		overlaps = sites_gr.nearest(gr, overlap = True).df
-# 		print('this happened')
-
-# 	print('\n')
-# 	print(result)
-# 	# print('\n')
-# 	# print(overlaps)
-# 	# Display
-
-# def extract_annotations(df, position):
-# 	start_le = df['start'].values <= position
-# 	end_ge = df['end'].values >= position
-# 	return df[start_le & end_ge]
-
-# def slice_annotation(df, chromosome, position, tolerance=3_000_000):
-# 	"""
-# 	Slice the genomic feature dataframe to a nearby window to reduce overhead.
-# 	"""
-# 	return df[
-# 		(df['chrom'] == chromosome) &
-# 		(df['end'] >= position - tolerance) &
-# 		(df['start'] <= position + tolerance)
-# 	].copy()
-
-# def get_closest_annotation(df, position, column_name):
-
-# 	df["distance"] = np.where(
-# 		(df["start"] <= position) & (df["end"] >= position),
-# 		0,
-# 		np.minimum(np.abs(df["start"] - position), np.abs(df["end"] - position))
-# 	)
-
-# 	df = df[df["distance"] == df["distance"].min()]
-	
-# 	return list(df[column_name].unique())[0], df['distance'].tolist()[0]
-
-
-
-
-
-
-

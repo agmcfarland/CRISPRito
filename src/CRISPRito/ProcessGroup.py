@@ -1,3 +1,4 @@
+import traceback
 import argparse
 import os
 from os.path import join as pjoin
@@ -5,6 +6,7 @@ import pandas as pd
 from CRISPRito.StandardCuts import StandardCuts
 from CRISPRito.FeatureManager import FeatureManager
 from CRISPRito.StandardCutRank import StandardCutRank
+from CRISPRito.Utils import setup_logging
 
 def process_group(
 	group_samplesheet_path,
@@ -119,16 +121,33 @@ def main():
 
 	args = parser.parse_args()
 
-	process_group(
-		group_samplesheet_path=args.group_samplesheet_path,
-		output_dir=args.output_dir,
-		genome_path=args.genome_path,
-		flank_size=args.flank_size,
-		sgRNA=args.sgRNA,
-		PAM_alignment=args.PAM_alignment,
-		range_threshold=args.range_threshold,
-		feature_table_path = args.feature_table_path
-	)
+	df = pd.read_csv(args.group_samplesheet_path)
+	cluster_group = df['cluster_group'].unique().item()
+
+	log_path = pjoin(args.output_dir, cluster_group + "_group_id.log")
+	
+	setup_logging(log_path)
+
+	try:
+		print("Starting ProcessGroup...")
+
+		process_group(
+			group_samplesheet_path=args.group_samplesheet_path,
+			output_dir=args.output_dir,
+			genome_path=args.genome_path,
+			flank_size=args.flank_size,
+			sgRNA=args.sgRNA,
+			PAM_alignment=args.PAM_alignment,
+			range_threshold=args.range_threshold,
+			feature_table_path = args.feature_table_path
+		)
+
+		print("Finished ProcessGroup.")
+
+	except Exception as e:
+		logging.error("Unhandled exception occurred:")
+		logging.error(traceback.format_exc())
+		sys.exit(1)
 
 
 if __name__ == '__main__':

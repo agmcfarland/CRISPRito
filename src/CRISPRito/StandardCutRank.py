@@ -39,6 +39,9 @@ class RankOperator:
 			rank_criteria_id = row['rank_criteria_id']
 		)
 
+	def __repr__(self):
+		return f"{self.variable}_{self.variable_type}_{self.source}_{self.condition}_{self.lower_threshold}_{self.upper_threshold}_{self.weight}_{self.type}_{self.rank_criteria_id}"
+
 	def apply_scoring_weights(self, df):
 		"""
 		Apply scoring weights to a DataFrame based on a specified variable, condition, and thresholds.
@@ -79,22 +82,22 @@ class RankOperator:
 
 				self.score = df[['cut_cluster', self.rank_criteria_id, self.variable]]
 
-		# this is a special case for feature and overlap
-		if self.variable_type == 'overlap':
+			# this is a special case for feature and overlap
+			if self.variable_type == 'overlap':
 
-			if self.variable == 'overlap':
+				if self.variable == 'overlap':
 
-				if self.source == 'default':
+					if self.source == 'default':
 
-					max_samples = datasets['samplesheet'].shape[0]
+						max_samples = datasets['samplesheet'].shape[0]
 
-					df = datasets['cut_profiles'].copy()
+						df = datasets['cut_profiles'].copy()
 
-					df[self.variable] = 100 * (df[self.variable]/max_samples)
+						df[self.variable] = 100 * (df[self.variable]/max_samples)
 
-					df = self.apply_scoring_weights(df = df)
+						df = self.apply_scoring_weights(df = df)
 
-					self.score = df[['cut_cluster', self.rank_criteria_id, self.variable]]
+						self.score = df[['cut_cluster', self.rank_criteria_id, self.variable]]
 
 		if self.type == 'sample':
 
@@ -114,7 +117,7 @@ class RankOperator:
 
 			if self.variable_type == 'overlap':
 
-				max_samples = datasets['samplesheet'].shape[0]
+				max_samples = datasets['samplesheet'][datasets['samplesheet'][self.type] == self.variable].shape[0]
 
 				df = datasets['method_counts'].copy()
 
@@ -126,6 +129,9 @@ class RankOperator:
 
 				self.score = df[['cut_cluster', self.rank_criteria_id, self.variable]]
 
+		# print(self.__repr__)
+		# print(self.score)
+		# print('\n')
 
 class StandardCutRank:
 
@@ -181,7 +187,7 @@ class StandardCutRank:
 			self.cut_cluster_scores = self.cut_cluster_scores.merge(rank_criteria.score[['cut_cluster', rank_criteria.rank_criteria_id]], on = 'cut_cluster')
 			
 		self.cut_cluster_scores['total_score'] = self.cut_cluster_scores.drop(columns='cut_cluster').sum(axis=1)
-		
+
 
 	def generate_ranking_skeleton(self, sample_sheet, feature_manager=None):
 		self.load_default_rank_list()
@@ -192,8 +198,7 @@ class StandardCutRank:
 
 		self.df_skeleton = pd.DataFrame(self.ranking_criteria)
 		self.df_skeleton.columns = ['variable',	'variable_type',	'source',	'type',	'condition',	'lower_threshold',	'upper_threshold',	'weight']
-		# self.df_skeleton.columns = ['variable', 'variable_type', 'condition', 'outcome', 'weight', 'source', 'type']
-		# self.df_skeleton = self.df_skeleton[['variable', 'variable_type', 'source', 'type', 'condition', 'outcome', 'weight']]
+
 
 	def load_default_rank_list(self):
 		# variable, variable_type, source, type, condition, lower_threshold, upper_threshold, weight
@@ -218,7 +223,7 @@ class StandardCutRank:
 
 	def load_user_feature_rank_list(self, feature_manager):
 		"""
-		# variable, variable_type, source, type, condition, lower_threshold, upper_threshold, weight
+		variable, variable_type, source, type, condition, lower_threshold, upper_threshold, weight
 		"""
 		for feature_, info_ in feature_manager.registry.items():
 			if info_['type'] == 'presence_absence':
@@ -229,7 +234,9 @@ class StandardCutRank:
 				self.ranking_criteria.append([f'nearest_{feature_}_distance', 'distance', 'user', 'feature', '>=', 1, 1000, 1])
 
 	def load_user_sample_rank_list(self, sample_sheet):
-		# variable, variable_type, source, type, condition, lower_threshold, upper_threshold, weight
+		"""
+		variable, variable_type, source, type, condition, lower_threshold, upper_threshold, weight
+		"""
 		type = 'sample'
 		variable_type = 'presence'
 		for _, row in sample_sheet.iterrows():
@@ -237,7 +244,9 @@ class StandardCutRank:
 
 
 	def load_user_method_rank_list(self, sample_sheet):
-		# variable, variable_type, source, type, condition, lower_threshold, upper_threshold, weight
+		"""
+		variable, variable_type, source, type, condition, lower_threshold, upper_threshold, weight
+		"""
 		type = 'method'
 		variable_type = 'overlap'
 		for method_ in sample_sheet['method'].drop_duplicates().tolist():

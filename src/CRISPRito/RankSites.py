@@ -1,8 +1,12 @@
+import traceback
 import argparse
 import os
 from os.path import join as pjoin
 import pandas as pd
 from CRISPRito.StandardCutRank import StandardCutRank
+from CRISPRito.Utils import setup_logging
+
+# from CRISPRito.StandardCutRank import RankOperator
 
 def rank_sites(
 	group_samplesheet_path,
@@ -13,6 +17,15 @@ def rank_sites(
 	output_dir,
 	output_name
 	):
+	"""
+	main_dir='/data/friederike_herbst_nowrouzi_project/projects/base_editor_ptprc_project/data/processed/1-crisprito_analysis/0-make_standard_inputs/score_methods_CRISPRito_0_2_0'
+	group_samplesheet_path = pjoin(main_dir,'1_group_samplesheet.csv')
+	rank_table_weights_path = pjoin(main_dir,'1_group_id_rank_weight_skeleton_modified.csv')
+	cut_profiles_path = pjoin(main_dir,'1_group_cut_profiles.csv')
+	id_counts_path = pjoin(main_dir,'1_group_id_counts.csv')
+	method_counts_path = pjoin(main_dir,'1_group_method_counts.csv')
+	"""
+
 	
 	df_group_samplesheet = pd.read_csv(group_samplesheet_path)
 
@@ -61,15 +74,29 @@ def main():
 
 	args = parser.parse_args()
 
-	rank_sites(
-		group_samplesheet_path = args.group_samplesheet_path,
-		rank_table_weights_path = args.rank_table_weights_path,
-		cut_profiles_path = args.cut_profiles_path,
-		id_counts_path = args.id_counts_path,
-		method_counts_path = args.method_counts_path,
-		output_dir = args.output_dir,
-		output_name = args.output_name
-	)
+	log_path = pjoin(args.output_dir, args.output_name + ".log")
+	
+	setup_logging(log_path)
+
+	try:
+		print("Starting ranking process...")
+
+		rank_sites(
+			group_samplesheet_path=args.group_samplesheet_path,
+			rank_table_weights_path=args.rank_table_weights_path,
+			cut_profiles_path=args.cut_profiles_path,
+			id_counts_path=args.id_counts_path,
+			method_counts_path=args.method_counts_path,
+			output_dir=args.output_dir,
+			output_name=args.output_name
+		)
+
+		print("Finished ranking process.")
+
+	except Exception as e:
+		logging.error("Unhandled exception occurred:")
+		logging.error(traceback.format_exc())
+		sys.exit(1)
 
 
 if __name__ == '__main__':
