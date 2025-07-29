@@ -27,7 +27,6 @@ def main():
 
 	log_path = pjoin(args.output_dir, "CRISPRito.log")
 	
-	setup_logging(log_path)
 
 	try:
 		print("Starting CRISPRito...")
@@ -40,6 +39,8 @@ def main():
 			feature_table_path=args.feature_table_path,
 			overwrite_output_dir=args.overwrite_output_dir
 		)
+
+		setup_logging(log_path)
 
 		# # Step 2: Process each *_group_samplesheet.csv
 		group_files = glob(pjoin(args.output_dir, "*_group_samplesheet.csv"))
