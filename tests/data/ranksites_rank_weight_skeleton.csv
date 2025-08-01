@@ -1,5 +1,6 @@
 ﻿variable,variable_type,source,type,condition,lower_threshold,upper_threshold,weight
-overlap,overlap,default,feature,>=,50,100,1
+overlap,percentage,default,feature,>=,50,100,1
+overlap,presence,default,feature,==,1,1,1
 zscore_mean,presence,default,feature,>=,1.5,inf,2
 zscore_min,presence,default,feature,>=,1.5,inf,0
 zscore_max,presence,default,feature,>=,1.5,inf,0
@@ -21,8 +22,10 @@ comp_sample3,presence,user,sample,==,1,1,0
 bio_sample4,presence,user,sample,==,1,1,0
 bio_sample5,presence,user,sample,==,1,1,0
 bio_sample6,presence,user,sample,==,1,1,0
-computational,overlap,user,method,>=,50,100,2
-biochemical,overlap,user,method,>=,30,100,1
+computational,percentage,user,method,>=,50,100,2
+biochemical,percentage,user,method,>=,30,100,1
+computational,presence,user,method,==,1,1,-1
+biochemical,presence,user,method,==,1,1,-1
 nearest_gene_distance,distance,user,feature,==,0,0,2
 nearest_gene_distance,distance,user,feature,>=,1,1000,1
 in_exon,presence,user,feature,==,1,1,2

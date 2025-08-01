@@ -45,9 +45,9 @@ def test_load_default_rank_list():
 	"""
 	sc = StandardCutRank()
 	sc.load_default_rank_list()
-	assert len(sc.ranking_criteria) == 16
+	assert len(sc.ranking_criteria) == 17
 	for i in sc.ranking_criteria:
-		assert len(i) == 8
+		assert len(i) == 8 # check number of values used for ranking
 
 def test_load_user_sample_rank_list(load_1_group_samplesheet_ptprc):
 	"""
@@ -86,10 +86,12 @@ def test_load_user_sample_rank_list(load_1_group_samplesheet_ptprc):
 def test_load_user_method_rank_list(load_1_group_samplesheet_ptprc):
 	"""
 	pytest -sv tests/unit/test_StandardCutRank.py::test_load_user_method_rank_list
+	This one is a bit weird because only iGUIDE is a true method and the rest are just
+	the sampel names instead of something like computational which would be better.
 	"""
 	sc = StandardCutRank()
 	sc.load_user_method_rank_list(load_1_group_samplesheet_ptprc)
-	assert len(sc.ranking_criteria) == 3
+	assert len(sc.ranking_criteria) == 6
 	for i in sc.ranking_criteria:
 		assert len(i) == 8
 
@@ -101,8 +103,11 @@ def test_generate_ranking_skeleton(load_1_group_samplesheet_ptprc, mock_registry
 	feature_manager = generate_feature_table(mock_registry)
 	sc = StandardCutRank()
 	sc.generate_ranking_skeleton(sample_sheet = load_1_group_samplesheet_ptprc, feature_manager = feature_manager)
-	assert len(sc.ranking_criteria) == 25
-	assert sc.df_skeleton.shape == (25, 8)
+	print(sc.ranking_criteria)
+	print('\n')
+	print(sc.df_skeleton)
+	assert len(sc.ranking_criteria) == 29
+	assert sc.df_skeleton.shape == (29, 8)
 
 
 def test_input_dataframes_to_standardcutrank(ranking_inputs):
@@ -165,23 +170,26 @@ def test_temp_1(ranking_inputs):
 
 	# print(sc.datasets['cut_profiles']['zscore_mean'])
 	# return
+	row_id = 2
 
 	# print(df)
 	for e, row in sc.rank_table_weights.iterrows():
-		if e == 1:
+		if e == row_id:
 			break
+	print(row)
 	# print(row)
 	rank_criteria = RankOperator.load_from_rank_table_row(row)
 	rank_criteria.score_criteria(datasets = sc.datasets)
-	# print(rank_criteria.score)
-	assert rank_criteria.score['rank_criteria_1'].tolist() == [2, 2, 2, 2, 0, 2, 2, 2, 0, 0]
-	
+	print(rank_criteria.score)
+	# return
+	assert rank_criteria.score[f'rank_criteria_{row_id}'].tolist() == [2, 2, 2, 2, 0, 2, 2, 2, 0, 0]
+	# return
 	print(row)
 	row.upper_threshold = 10
 	rank_criteria = RankOperator.load_from_rank_table_row(row)
 	rank_criteria.score_criteria(datasets = sc.datasets)
 	print(rank_criteria.score)
-	assert rank_criteria.score['rank_criteria_1'].tolist() == [0, 0, 0, 2, 0, 2, 2, 2, 0, 0]
+	assert rank_criteria.score[f'rank_criteria_{row_id}'].tolist() == [0, 0, 0, 2, 0, 2, 2, 2, 0, 0]
 
 
 
@@ -201,14 +209,18 @@ def test_temp_2(ranking_inputs):
 
 	# print(sc.datasets)
 
+	# print(sc.rank_table_weights)
+	# return
+	row_id = 0
+
 	# print(df)
 	for e, row in sc.rank_table_weights.iterrows():
-		if e == 0:
+		if e == row_id:
 			break
 	rank_criteria = RankOperator.load_from_rank_table_row(row)
 	rank_criteria.score_criteria(datasets = sc.datasets)
 	print(rank_criteria.score)
-	assert rank_criteria.score['rank_criteria_0'].tolist() == [1, 1, 1, 1, 1, 1, 0, 0, 0, 0]
+	assert rank_criteria.score[f'rank_criteria_{row_id}'].tolist() == [1, 1, 1, 1, 1, 1, 0, 0, 0, 0]
 
 	print(row)
 	row2 = row
@@ -219,12 +231,13 @@ def test_temp_2(ranking_inputs):
 	# print(rank_criteria.__dict__)
 	rank_criteria2.score_criteria(datasets = sc.datasets)
 	print(rank_criteria2.score)
-	assert rank_criteria2.score['rank_criteria_0'].tolist() == [0, 0, 0, 1, 1, 1, 0, 0, 0, 0]
+	assert rank_criteria2.score[f'rank_criteria_{row_id}'].tolist() == [0, 0, 0, 1, 1, 1, 0, 0, 0, 0]
 
 
 def test_temp_3(ranking_inputs):
 	"""
 	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_3
+	alignment_length >= 17 and 22
 	"""
 
 	sc = StandardCutRank(
@@ -236,17 +249,18 @@ def test_temp_3(ranking_inputs):
 		)
 
 	# print(sc.datasets)
+	row_id = 16
 
 	# print(df)
 	for e, row in sc.rank_table_weights.iterrows():
-		if e == 15:
+		if e == row_id:
 			break
 	print(row)
 	# return
 	rank_criteria = RankOperator.load_from_rank_table_row(row)
 	rank_criteria.score_criteria(datasets = sc.datasets)
 	print(rank_criteria.score)
-	assert rank_criteria.score['rank_criteria_15'].tolist() == [2, 2, 2, 2, 2, 2, 2, 2, 0, 2]
+	assert rank_criteria.score[f'rank_criteria_{row_id}'].tolist() == [2, 2, 2, 2, 2, 2, 2, 2, 0, 2]
 
 
 
@@ -265,93 +279,7 @@ def test_temp_4(ranking_inputs):
 		)
 
 	# print(sc.datasets)
-
-	# print(df)
-	for e, row in sc.rank_table_weights.iterrows():
-		if e == 25:
-			print(row)
-			# break
-			rank_criteria = RankOperator.load_from_rank_table_row(row)
-			# print(rank_criteria.score)
-			rank_criteria.score_criteria(datasets = sc.datasets)
-			print(rank_criteria.score)
-			break
-		pass
-	assert rank_criteria.score['rank_criteria_25'].tolist() == [0, 1, 1, 0, 0 ,0 ,0 ,0, 1 ,1]
-
-def test_temp_5(ranking_inputs):
-	"""
-	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_5
-	Overlap of method (biochemical)
-	"""
-
-	sc = StandardCutRank(
-		rank_table_weights=pd.read_csv(ranking_inputs['weight_skeleton']),
-		cut_profiles=pd.read_csv(ranking_inputs['cut_profiles']),
-		id_counts=pd.read_csv(ranking_inputs['id_counts']),
-		method_counts=pd.read_csv(ranking_inputs['method_counts']),
-		samplesheet=pd.read_csv(ranking_inputs['samplesheet'])
-		)
-
-	# print(sc.datasets)
-
-	# print(df)
-	for e, row in sc.rank_table_weights.iterrows():
-		if e == 22:
-			print(row)
-			# break
-			rank_criteria = RankOperator.load_from_rank_table_row(row)
-			# print(rank_criteria.score)
-			rank_criteria.score_criteria(datasets = sc.datasets)
-			print(rank_criteria.score)
-			break
-		pass
-	assert rank_criteria.score['rank_criteria_22'].tolist() == [2, 2, 2, 2, 2, 2, 2, 0, 0, 0]
-
-
-def test_temp_6(ranking_inputs):
-	"""
-	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_6
-	Testing biosample5
-	"""
-
-	sc = StandardCutRank(
-		rank_table_weights=pd.read_csv(ranking_inputs['weight_skeleton']),
-		cut_profiles=pd.read_csv(ranking_inputs['cut_profiles']),
-		id_counts=pd.read_csv(ranking_inputs['id_counts']),
-		method_counts=pd.read_csv(ranking_inputs['method_counts']),
-		samplesheet=pd.read_csv(ranking_inputs['samplesheet'])
-		)
-
-	# print(sc.datasets)
-
-	# print(df)
-	for e, row in sc.rank_table_weights.iterrows():
-		if e == 20:
-			print(row)
-			# break
-			rank_criteria = RankOperator.load_from_rank_table_row(row)
-			# print(rank_criteria.score)
-			rank_criteria.score_criteria(datasets = sc.datasets)
-			print(rank_criteria.score)
-			break
-		pass
-	assert rank_criteria.score['rank_criteria_20'].tolist() == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-def test_temp_7(ranking_inputs):
-	"""
-	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_7
-	"""
-
-	sc = StandardCutRank(
-		rank_table_weights=pd.read_csv(ranking_inputs['weight_skeleton']),
-		cut_profiles=pd.read_csv(ranking_inputs['cut_profiles']),
-		id_counts=pd.read_csv(ranking_inputs['id_counts']),
-		method_counts=pd.read_csv(ranking_inputs['method_counts']),
-		samplesheet=pd.read_csv(ranking_inputs['samplesheet'])
-		)
-
-	# print(sc.datasets)
+	row_id = 28
 
 	# print(df)
 	for e, row in sc.rank_table_weights.iterrows():
@@ -359,17 +287,19 @@ def test_temp_7(ranking_inputs):
 			print(row)
 			# break
 			rank_criteria = RankOperator.load_from_rank_table_row(row)
-			print(rank_criteria.score)
+			# print(rank_criteria.score)
 			rank_criteria.score_criteria(datasets = sc.datasets)
 			print(rank_criteria.score)
 			break
+			# return
 		pass
-	assert rank_criteria.score['rank_criteria_28'].tolist() == [2, 2, 0, 0, 0, 2, 0, 0, 0, 0]
+	# return
+	assert rank_criteria.score[f'rank_criteria_{row_id}'].tolist() == [0, 1, 1, 0, 0 ,0 ,0 ,0, 1 ,1]
 
-def test_temp_8(ranking_inputs):
+def test_temp_5(ranking_inputs):
 	"""
-	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_8
-	overlap method biochemical
+	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_5
+	Overlap of method (biochemical) with percentage
 	"""
 
 	sc = StandardCutRank(
@@ -381,6 +311,133 @@ def test_temp_8(ranking_inputs):
 		)
 
 	# print(sc.datasets)
+	row_id = 24
+
+	# print(df)
+	for e, row in sc.rank_table_weights.iterrows():
+		if e == row_id:
+			print(row)
+			# break
+			rank_criteria = RankOperator.load_from_rank_table_row(row)
+			# print(rank_criteria.score)
+			rank_criteria.score_criteria(datasets = sc.datasets)
+			print(rank_criteria.score)
+			# return
+			break
+		pass
+	# return
+	assert rank_criteria.score[f'rank_criteria_{row_id}'].tolist() == [1, 1, 1, 1, 1, 1, 0, 0, 1, 0]
+
+def test_temp_5_presence(ranking_inputs):
+	"""
+	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_5_presence
+	Overlap of method (biochemical) with raw number
+	"""
+
+	sc = StandardCutRank(
+		rank_table_weights=pd.read_csv(ranking_inputs['weight_skeleton']),
+		cut_profiles=pd.read_csv(ranking_inputs['cut_profiles']),
+		id_counts=pd.read_csv(ranking_inputs['id_counts']),
+		method_counts=pd.read_csv(ranking_inputs['method_counts']),
+		samplesheet=pd.read_csv(ranking_inputs['samplesheet'])
+		)
+
+	# print(sc.datasets)
+	row_id = 26
+
+	# print(df)
+	for e, row in sc.rank_table_weights.iterrows():
+		if e == row_id:
+			print(row)
+			# break
+			rank_criteria = RankOperator.load_from_rank_table_row(row)
+			# print(rank_criteria.score)
+			rank_criteria.score_criteria(datasets = sc.datasets)
+			print(rank_criteria.score)
+			# return
+			break
+		pass
+	return
+	assert rank_criteria.score[f'rank_criteria_{row_id}'].tolist() == [0,0,0,0,0,-1,0,0,-1, 0]
+
+
+def test_temp_6(ranking_inputs):
+	"""
+	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_6
+	Testing biosample4
+	"""
+
+	sc = StandardCutRank(
+		rank_table_weights=pd.read_csv(ranking_inputs['weight_skeleton']),
+		cut_profiles=pd.read_csv(ranking_inputs['cut_profiles']),
+		id_counts=pd.read_csv(ranking_inputs['id_counts']),
+		method_counts=pd.read_csv(ranking_inputs['method_counts']),
+		samplesheet=pd.read_csv(ranking_inputs['samplesheet'])
+		)
+
+	# print(sc.datasets)
+	row_id = 20
+
+	# print(df)
+	for e, row in sc.rank_table_weights.iterrows():
+		if e == row_id:
+			print(row)
+			# break
+			rank_criteria = RankOperator.load_from_rank_table_row(row)
+			# print(rank_criteria.score)
+			rank_criteria.score_criteria(datasets = sc.datasets)
+			print(rank_criteria.score)
+			break
+		pass
+	assert rank_criteria.score[f'rank_criteria_{row_id}'].tolist() == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+def test_temp_7(ranking_inputs):
+	"""
+	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_7
+	nearest oncogene distance == 0,0
+	"""
+
+	sc = StandardCutRank(
+		rank_table_weights=pd.read_csv(ranking_inputs['weight_skeleton']),
+		cut_profiles=pd.read_csv(ranking_inputs['cut_profiles']),
+		id_counts=pd.read_csv(ranking_inputs['id_counts']),
+		method_counts=pd.read_csv(ranking_inputs['method_counts']),
+		samplesheet=pd.read_csv(ranking_inputs['samplesheet'])
+		)
+
+	# print(sc.datasets)
+	row_id = 31
+
+	# print(df)
+	for e, row in sc.rank_table_weights.iterrows():
+		if e == row_id:
+			print(row)
+			# break
+			rank_criteria = RankOperator.load_from_rank_table_row(row)
+			print(rank_criteria.score)
+			rank_criteria.score_criteria(datasets = sc.datasets)
+			print(rank_criteria.score)
+			break
+		pass
+	# return
+	assert rank_criteria.score[f'rank_criteria_{row_id}'].tolist() == [2, 2, 0, 0, 0, 2, 0, 0, 0, 0]
+
+def test_temp_8(ranking_inputs):
+	"""
+	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_8
+	overlap method biochemical percentage
+	"""
+
+	sc = StandardCutRank(
+		rank_table_weights=pd.read_csv(ranking_inputs['weight_skeleton']),
+		cut_profiles=pd.read_csv(ranking_inputs['cut_profiles']),
+		id_counts=pd.read_csv(ranking_inputs['id_counts']),
+		method_counts=pd.read_csv(ranking_inputs['method_counts']),
+		samplesheet=pd.read_csv(ranking_inputs['samplesheet'])
+		)
+
+	# print(sc.datasets)
+	row_id = 23
 
 	# print(df)
 	for e, row in sc.rank_table_weights.iterrows():
@@ -395,7 +452,39 @@ def test_temp_8(ranking_inputs):
 			break
 		pass
 	# return
-	assert rank_criteria.score['rank_criteria_23'].tolist() == [1,1,1,1,1,1, 0 ,0 ,1 ,0]
+	assert rank_criteria.score[f'rank_criteria_{row_id}'].tolist() == [2, 2, 2, 2, 2, 2, 2, 0, 0, 0]
+
+def test_temp_9(ranking_inputs):
+	"""
+	pytest -sv tests/unit/test_StandardCutRank.py::test_temp_9
+	overlap presence
+	"""
+
+	sc = StandardCutRank(
+		rank_table_weights=pd.read_csv(ranking_inputs['weight_skeleton']),
+		cut_profiles=pd.read_csv(ranking_inputs['cut_profiles']),
+		id_counts=pd.read_csv(ranking_inputs['id_counts']),
+		method_counts=pd.read_csv(ranking_inputs['method_counts']),
+		samplesheet=pd.read_csv(ranking_inputs['samplesheet'])
+		)
+
+	# print(sc.datasets)
+	row_id = 1
+
+	# print(df)
+	for e, row in sc.rank_table_weights.iterrows():
+		if e == 1:
+			print(row)
+			# return
+			# break
+			rank_criteria = RankOperator.load_from_rank_table_row(row)
+			print(rank_criteria.score)
+			rank_criteria.score_criteria(datasets = sc.datasets)
+			print(rank_criteria.score)
+			break
+		pass
+	# return
+	assert rank_criteria.score[f'rank_criteria_{row_id}'].tolist() == [0,0,0,0,0,0,0,1,1,1]
 
 
 def test_temp_go_through_all(ranking_inputs):
@@ -449,14 +538,17 @@ def test_tally_cut_cluster_scores(ranking_inputs):
 	sc.tally_cut_cluster_scores()
 
 	print(sc.cut_cluster_scores['total_score'])
+	print(sc.cut_cluster_scores.shape)
+	# return
 
-	assert sc.cut_cluster_scores.shape == (10, 32)
+	assert sc.cut_cluster_scores.shape == (10, 35)
 
-	print(sc.cut_cluster_scores[['cut_cluster','rank_criteria_0']])
+	# print(sc.cut_cluster_scores[['cut_cluster','rank_criteria_0']])
 
 	# return
 
-	assert sc.cut_cluster_scores['total_score'].tolist() == [20.5,17.5,16.5,14.0,14.0,18.5,12.5,13.5,3.0,4.0]
+	assert sc.cut_cluster_scores['total_score'].tolist() == [20.5,17.5,16.5,14.0,14.0,17.5,12.5,13.5, 3.0, 4.0]
+
 
 
 

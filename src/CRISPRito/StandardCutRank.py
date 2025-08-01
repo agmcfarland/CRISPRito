@@ -72,9 +72,11 @@ class RankOperator:
 
 	def score_criteria(self, datasets):
 
-		if self.type == 'feature':
+		
 			
-			if self.variable_type == 'presence' or self.variable_type == 'distance':
+		if self.variable_type == 'presence' or self.variable_type == 'distance':
+
+			if self.type == 'feature':
 
 				df = datasets['cut_profiles'].copy()
 
@@ -82,22 +84,22 @@ class RankOperator:
 
 				self.score = df[['cut_cluster', self.rank_criteria_id, self.variable]]
 
-			# this is a special case for feature and overlap
-			if self.variable_type == 'overlap':
+			
+		# this is a special case for feature and overlap percentage	
+		if self.variable == 'overlap':
 
-				if self.variable == 'overlap':
+			if self.variable_type == 'percentage':
 
-					if self.source == 'default':
+				max_samples = datasets['samplesheet'].shape[0]
 
-						max_samples = datasets['samplesheet'].shape[0]
+				df = datasets['cut_profiles'].copy()
 
-						df = datasets['cut_profiles'].copy()
+				df[self.variable] = 100 * (df[self.variable]/max_samples)
 
-						df[self.variable] = 100 * (df[self.variable]/max_samples)
+				df = self.apply_scoring_weights(df = df)
 
-						df = self.apply_scoring_weights(df = df)
+				self.score = df[['cut_cluster', self.rank_criteria_id, self.variable]]
 
-						self.score = df[['cut_cluster', self.rank_criteria_id, self.variable]]
 
 		if self.type == 'sample':
 
@@ -115,7 +117,7 @@ class RankOperator:
 
 		if self.type == 'method':
 
-			if self.variable_type == 'overlap':
+			if self.variable_type == 'percentage':
 
 				max_samples = datasets['samplesheet'][datasets['samplesheet'][self.type] == self.variable].shape[0]
 
@@ -124,6 +126,20 @@ class RankOperator:
 				df = df[df[self.type] == self.variable]
 
 				df[self.variable] = 100 * (df['detected']/max_samples)
+
+				df = self.apply_scoring_weights(df = df)
+
+				self.score = df[['cut_cluster', self.rank_criteria_id, self.variable]]
+
+		if self.type == 'method':
+
+			if self.variable_type == 'presence':
+
+				df = datasets['method_counts'].copy()
+
+				df = df[df[self.type] == self.variable]
+
+				df[self.variable] = df['detected']
 
 				df = self.apply_scoring_weights(df = df)
 
@@ -203,7 +219,8 @@ class StandardCutRank:
 	def load_default_rank_list(self):
 		# variable, variable_type, source, type, condition, lower_threshold, upper_threshold, weight
 		self.ranking_criteria =	[
-			['overlap',	'overlap',	'default',	'feature',				'>=',	50,	100,	1],
+			['overlap',	'percentage',	'default',	'feature',			'>=',	50,	100,	1],
+			['overlap',	'presence',	'default',	'feature',				'==',	1,	1,	-3],
 			['zscore_mean',	'presence',	'default',	'feature',			'>=',	1.5,	float('inf'),	2],
 			['zscore_min',	'presence',	'default',	'feature',			'>=',	1.5,	float('inf'),	0],
 			['zscore_max',	'presence',	'default',	'feature',			'>=',	1.5,	float('inf'),	0],
@@ -220,6 +237,7 @@ class StandardCutRank:
 			['lev_distance',	'distance',	'default',	'feature',		'>=',	4,	7,	3],
 			['alignment_length',	'distance',	'default',	'feature',	'>=',	17,	22,	2]
 			]
+
 
 	def load_user_feature_rank_list(self, feature_manager):
 		"""
@@ -248,9 +266,14 @@ class StandardCutRank:
 		variable, variable_type, source, type, condition, lower_threshold, upper_threshold, weight
 		"""
 		type = 'method'
-		variable_type = 'overlap'
+		variable_type = 'percentage'
 		for method_ in sample_sheet['method'].drop_duplicates().tolist():
-			self.ranking_criteria.append([method_, variable_type, 'user', type, '==', 1, 1, 0])
+			self.ranking_criteria.append([method_, variable_type, 'user', type, '>=', 50, 100, 1])
+
+		type = 'method'
+		variable_type = 'presence'
+		for method_ in sample_sheet['method'].drop_duplicates().tolist():
+			self.ranking_criteria.append([method_, variable_type, 'user', type, '==', 1, 1, -3])
 
 
 
