@@ -4,7 +4,7 @@ import pytest
 import pandas as pd
 from unittest import mock
 from os.path import join as pjoin
-from CRISPRito.RankSites import rank_sites
+from CRISPRito.RankSites import rank_sites_standard
 
 
 def test_rank_sites_1(ranking_inputs):
@@ -15,7 +15,7 @@ def test_rank_sites_1(ranking_inputs):
 	with tempfile.TemporaryDirectory() as tmpdir:
 		with mock.patch('CRISPRito.RankSites.pd.core.frame.DataFrame.to_csv') as mock_to_csv:
 
-			rank_sites(
+			rank_sites_standard(
 				group_samplesheet_path = ranking_inputs['samplesheet'],
 				rank_table_weights_path = ranking_inputs['weight_skeleton'],
 				cut_profiles_path = ranking_inputs['cut_profiles'],

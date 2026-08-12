@@ -1,0 +1,54 @@
+package:
+  name: "crisprito"
+  version: "1.0.0"
+
+source:
+  path: ..
+
+build:
+  noarch: python
+  number: 0
+  script: "python -m pip install . --no-deps --no-build-isolation -vv"
+  entry_points:
+    - setup_run = CRISPRito.SetupRun:main
+    - process_group = CRISPRito.ProcessGroup:main
+    - rank_sites = CRISPRito.RankSites:main
+    - CRISPRito = CRISPRito.CRISPRito:main
+
+requirements:
+  host:
+    - python >=3.10,<3.13
+    - pip
+    - setuptools >=61.0.0
+    - wheel
+  run:
+    - python >=3.10
+    - biopython ==1.85
+    - numpy ==2.2.5
+    - pandas
+    - scikit-bio ==0.7.3
+    - scipy ==1.15.2
+    - pyranges ==0.1.4
+    - scikit-learn ==1.6.1
+    - tqdm
+
+test:
+  imports:
+    - CRISPRito
+  commands:
+    - python -c "from Bio.Seq import Seq"
+    - python -c "from skbio import DNA; from skbio.alignment import global_pairwise_align_nucleotide"
+    - python -c "import pyranges as pr; assert pr.__version__ == '0.1.4'"
+    - python -c "from CRISPRito.AutoRankCuts import AutoRankCuts"
+    - python -c "from CRISPRito.StandardCutRank import StandardCutRank"
+    - setup_run --help
+    - rank_sites --help
+
+about:
+  home: "https://github.com/agmcfarland/CRISPRito"
+  license: MIT  # match your actual license
+  summary: "Multi method CRISPR cut standardization, combination, annotation, and prioritizer."
+
+extra:
+  recipe-maintainers:
+    - agmcfarland

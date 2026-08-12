@@ -1,14 +1,14 @@
 [project]
 name = "CRISPRito"
-version = "0.2.0"
-description = "Comprehensive nomination of CRISPR sites from cutting and editing data"
+version = "1.0.0"
+description = "Multi method CRISPR cut standardization, combination, annotation, and prioritizer."
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 #license = {file = "LICENSE"}
-
 authors = [
 	{name = "Alexander McFarland"}
 ]
+
 maintainers = [
 	{name = "Alexander McFarland"}
 ]
@@ -18,12 +18,18 @@ classifiers = [
 	"License :: OSI Approved :: MIT License",
 	"Programming Language :: Python :: 3.10",
 	"Programming Language :: Python :: 3.11",
+	"Programming Language :: Python :: 3.12",
 ]
 
 dependencies = [
-	"biopython",
-	"numpy",
-	"pandas"
+	"biopython==1.85",
+	"numpy==2.2.5",
+	"pandas",
+	"scikit-bio==0.7.3",
+	"scipy==1.15.2",
+	"pyranges==0.1.4",
+	"scikit-learn==1.6.1",
+	"tqdm",
 ]
 
 [project.optional-dependencies]
@@ -34,14 +40,14 @@ test = ["pytest", "pytest-cov"]
 "Homepage" = "https://github.com/agmcfarland/CRISPRito/"
 "Bug Reports" = "https://github.com/agmcfarland/CRISPRito/issues"
 "Source" = "https://github.com/agmcfarland/CRISPRito/"
-
 [project.scripts]
+
 setup_run = "CRISPRito.SetupRun:main"
 process_group = "CRISPRito.ProcessGroup:main"
 rank_sites = "CRISPRito.RankSites:main"
-CRISPRito = " CRISPRito.CRISPRito:main"
-
+CRISPRito = "CRISPRito.CRISPRito:main"
 [tool.setuptools.packages.find]
+
 where = ["src"]
 
 [build-system]

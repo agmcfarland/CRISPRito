@@ -151,13 +151,14 @@ class RankOperator:
 
 class StandardCutRank:
 
-	def __init__(self, rank_table_weights = None, cut_profiles=None, id_counts=None, method_counts=None, samplesheet=None):
+	def __init__(self, rank_table_weights = None, cut_profiles=None, id_counts=None, method_counts=None, samplesheet=None, cut_id_detail = None):
 		self.ranking_criteria = []
 		self.rank_table_weights = rank_table_weights
 		self.cut_profiles = cut_profiles
 		self.id_counts = id_counts
 		self.method_counts = method_counts
 		self.samplesheet = samplesheet
+		self.cut_id_detail = cut_id_detail
 
 		if self.samplesheet is not None:
 			if self.id_counts is not None:
@@ -274,8 +275,5 @@ class StandardCutRank:
 		variable_type = 'presence'
 		for method_ in sample_sheet['method'].drop_duplicates().tolist():
 			self.ranking_criteria.append([method_, variable_type, 'user', type, '==', 1, 1, -3])
-
-
-
 
 

@@ -4,6 +4,8 @@ cd /data/CRISPRito
 
 python -m pytest --disable-warnings -sv tests
 
+pytest -sv tests/unit/test_AutoRankCuts.py
+
 pytest -sv tests/unit/test_StandardCutRank.py
 
 pytest -sv tests/unit/test_RankSites.py
@@ -34,6 +36,13 @@ pytest -sv tests/unit/test_standardize_scores.py
 
 pytest -sv tests/unit/test_misc.py
 
+conda create test_crisprito
+
+conda activate test_crisprito
+
+pip install -e .
+
+pip install -e /.
 
 # pytest -sv tests/unit/test_standard_cut_alignments.py::test_alignment6
 
