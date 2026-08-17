@@ -82,7 +82,7 @@ class StandardCuts:
 			
 			self.df_cut_sites = pd.concat([self.df_cut_sites, df_sample])
 
-		self.df_cut_sites = self.df_cut_sites.merge(self.sample_sheet[['id', 'measurement_type']], on = 'id')
+		# self.df_cut_sites = self.df_cut_sites.merge(self.sample_sheet[['id', 'measurement_type']], on = 'id')
 
 	def remove_cluster_duplicates(self):
 		"""

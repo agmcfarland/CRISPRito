@@ -136,8 +136,8 @@ def test_power_law_decay_zero_distance_gives_weight_one():
 	pytest -sv tests/unit/test_AutoRankCuts.py::test_power_law_decay_zero_distance_gives_weight_one
 	"""
 	cut_profile = pd.DataFrame({
-		'cut_cluster': [1, 2, 3],
-		'nearest_gene_distance': [0, 5000, 10000]
+		'cut_cluster': [1, 2, 3, 4],
+		'nearest_gene_distance': [0, 5000, 10000, 100000]
 	})
 
 	arc = AutoRankCuts(cut_profile=cut_profile)
@@ -147,8 +147,8 @@ def test_power_law_decay_zero_distance_gives_weight_one():
 	assert weights[1] == pytest.approx(1.0)
 	# tau is defined as the distance where weight = 0.5
 	assert weights[2] == pytest.approx(0.5, abs=1e-6)
-	# weight should be strictly decreasing with distance
-	assert weights[1] > weights[2] > weights[3]
+	# weight should be strictly decreasing with distance up until limit
+	assert weights[1] > weights[2] > weights[3] == weights[4]
 
 
 def test_power_law_decay_unannotated_distance_treated_as_max():
@@ -259,13 +259,14 @@ def test_prepare_combined_rank_output_merges_all_components():
 	arc.cut_profile['chromosome'] = ['chr1', 'chr1']
 	arc.cut_profile['strand'] = ['+', '+']
 	arc.cut_profile['cut'] = [100, 200]
-	arc.cut_profile['nearest_gene'] = ['GENE1', 'GENE2']
+	# arc.cut_profile['nearest_gene'] = ['GENE1', 'GENE2']
 
 	arc.construct_crisprito_rank(score_col='rra_weighted_magnitude_score')
 	out = arc.prepare_combined_rank_output()
 
 	expected_cols = {
-		'cut_cluster', 'chromosome', 'strand', 'cut', 'nearest_gene',
+		'cut_cluster', 'chromosome', 'strand', 'cut',
+		 # 'nearest_gene',
 		'crisprito_rank', 'combined_priority_index', 'composite_decay_weight',
 		'p_rra', 'log_p_rra', 'magnitude_score',
 		'gene_distance', 'gene_distance_decay_weight', 'total_methods', 'A', 'B'

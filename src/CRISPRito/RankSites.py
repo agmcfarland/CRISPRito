@@ -7,9 +7,50 @@ from os.path import join as pjoin
 import pandas as pd
 from CRISPRito.StandardCutRank import StandardCutRank
 from CRISPRito.AutoRankCuts import AutoRankCuts
-from CRISPRito.Utils import setup_logging
+from CRISPRito.Utils import setup_logging, report_time
 
 
+def resolve_group_paths(cluster_group, data_dir, workflow):
+	"""
+	Resolve the standard step-1 pipeline output filenames for a given cluster_group,
+	so downstream steps only need --cluster_group and --data_dir rather than five
+	separate explicit path arguments.
+
+	Naming convention (must match step 1 output):
+		{cluster_group}_group_cut_profiles.csv
+		{cluster_group}_group_method_counts.csv
+		{cluster_group}_group_id_counts.csv
+		{cluster_group}_group_id_cut_detail.csv
+		{cluster_group}_group_samplesheet.csv
+
+	Only the files actually used by `workflow` are required to exist: 'auto' doesn't
+	use method_counts/id_counts, and 'standard' doesn't use cut_id_detail.
+	"""
+
+	paths = {
+		'cut_profiles_path': pjoin(data_dir, f'{cluster_group}_group_cut_profiles.csv'),
+		'method_counts_path': pjoin(data_dir, f'{cluster_group}_group_method_counts.csv'),
+		'id_counts_path': pjoin(data_dir, f'{cluster_group}_group_id_counts.csv'),
+		'cut_id_detail_path': pjoin(data_dir, f'{cluster_group}_group_id_cut_detail.csv'),
+		'group_samplesheet_path': pjoin(data_dir, f'{cluster_group}_group_samplesheet.csv'),
+		}
+
+	required_by_workflow = {
+		'standard': ['cut_profiles_path', 'method_counts_path', 'id_counts_path', 'group_samplesheet_path'],
+		'auto': ['cut_profiles_path', 'cut_id_detail_path', 'group_samplesheet_path'],
+		}
+	required = required_by_workflow[workflow]
+
+	missing = [name for name in required if not os.path.isfile(paths[name])]
+	if missing:
+		raise FileNotFoundError(
+			f"Could not find expected file(s) for cluster_group '{cluster_group}' in '{data_dir}': "
+			+ ", ".join(f"{name} -> {paths[name]}" for name in missing)
+			)
+
+	return paths
+
+@report_time
 def rank_sites_standard(
 	group_samplesheet_path,
 	rank_table_weights_path,
@@ -48,11 +89,12 @@ def rank_sites_standard(
 	sc_ranks.cut_cluster_scores.to_csv(pjoin(output_dir, output_name + '.csv'), index = None)
 	sc_ranks.rank_table_weights.to_csv(pjoin(output_dir, output_name + '_weights_metadata.csv'), index = None)
 
-
+@report_time
 def rank_sites_auto(
 	cut_profiles_path,
 	cut_id_detail_path,
-	distance_cols,
+	group_samplesheet_path,
+	feature_driver_path,
 	magnitude_transform,
 	magnitude_aggregation,
 	tau,
@@ -72,6 +114,15 @@ def rank_sites_auto(
 
 	df_cut_profiles = pd.read_csv(cut_profiles_path)
 	df_cut_id_detail = pd.read_csv(cut_id_detail_path)
+	df_group_samplesheet = pd.read_csv(group_samplesheet_path)
+	if feature_driver_path is not None:
+		df_feature_driver = pd.read_csv(feature_driver_path)
+
+	df_cut_id_detail = df_cut_id_detail.merge(
+		df_group_samplesheet[['id', 'method']],
+		how = 'left',
+		on = 'id'
+		)
 
 	autoranker = AutoRankCuts(
 		cut_id_detail = df_cut_id_detail,
@@ -85,7 +136,11 @@ def rank_sites_auto(
 		aggregation = magnitude_aggregation
 		)
 
-	if distance_cols:
+	# automatically extract feature by annotation type
+	if feature_driver_path is not None:
+		distance_cols = df_feature_driver[df_feature_driver['type'] == 'annotation']['feature'].tolist()
+		distance_cols = [f'nearest_{i}_distance' for i in distance_cols]
+
 		for distance_col_ in distance_cols:
 			autoranker.calculate_power_law_distance_decay(
 				distance_col = distance_col_,
@@ -93,6 +148,8 @@ def rank_sites_auto(
 				gamma = gamma,
 				max_distance_bp = max_distance_bp
 				)
+
+	autoranker.compute_method_support_summary()
 
 	autoranker.construct_crisprito_rank(
 		feature_weights = feature_weights,
@@ -112,30 +169,32 @@ def main():
 		"--workflow",
 		choices = ["standard", "auto"],
 		required = True,
+		default = 'auto',
 		help = "Which ranking workflow to run: 'standard' (StandardCutRank, user-weighted rule-based scoring) "
-		       "or 'auto' (AutoRankCuts, RRA-based consensus ranking with optional magnitude/spatial enrichment)."
+		       "or 'auto' (AutoRankCuts, RRA-based consensus ranking with optional magnitude/spatial enrichment). [Default auto]."
 		)
 
 	# Shared args
-	parser.add_argument("--cut_profiles_path", required = True)
+	parser.add_argument(
+		"--cluster_group",
+		required = True,
+		help = "cluster_group identifier from step 1 of the pipeline. Used with --data_dir to auto-resolve "
+		       "cut_profiles, method_counts, cut_id_detail, and samplesheet paths."
+		)
+	parser.add_argument(
+		"--data_dir",
+		required = True,
+		help = "Directory containing step 1 pipeline outputs for this cluster_group "
+		       "(e.g. '{cluster_group}_group_cut_profiles.csv', etc.)."
+		)
 	parser.add_argument("--output_dir", default = "CRISPRito_output", help = "Directory to save output CSV.")
 	parser.add_argument("--output_name", default = "ranked_cut_sites", help = "Name of ranked sites table.")
 
 	# StandardCutRank-specific args
-	parser.add_argument("--group_samplesheet_path", help = "[standard] Path to the sample sheet CSV.")
 	parser.add_argument("--rank_table_weights_path", help = "[standard] Path to the weights table.")
-	parser.add_argument("--id_counts_path", help = "[standard] Path to id_counts CSV.")
-	parser.add_argument("--method_counts_path", help = "[standard] Path to method_counts CSV.")
 
 	# AutoRankCuts-specific args
-	parser.add_argument("--cut_id_detail_path", help = "[auto] Path to the per-detection cut_id_detail CSV.")
-	parser.add_argument(
-		"--distance_cols",
-		nargs = "*",
-		default = [],
-		help = "[auto] One or more distance columns in cut_profiles to compute power-law decay weights for "
-		       "(e.g. nearest_gene_distance nearest_oncogene_distance)."
-		)
+	parser.add_argument("--feature_driver_path", default = None, help = "['auto] Path to the feature annotation CSV.")
 	parser.add_argument(
 		"--magnitude_transform",
 		choices = ["zscore", "minmax", "percentile", "raw"],
@@ -182,36 +241,28 @@ def main():
 	try:
 		print(f"Starting ranking process ({args.workflow})...")
 
+		group_paths = resolve_group_paths(args.cluster_group, args.data_dir, args.workflow)
+
 		if args.workflow == "standard":
-			required = {
-				"group_samplesheet_path": args.group_samplesheet_path,
-				"rank_table_weights_path": args.rank_table_weights_path,
-				}
-			missing = [k for k, v in required.items() if v is None]
-			if missing:
-				parser.error(f"--workflow standard requires: {', '.join('--' + m for m in missing)}")
 
 			rank_sites_standard(
-				group_samplesheet_path = args.group_samplesheet_path,
+				group_samplesheet_path = group_paths['group_samplesheet_path'],
 				rank_table_weights_path = args.rank_table_weights_path,
-				cut_profiles_path = args.cut_profiles_path,
-				id_counts_path = args.id_counts_path,
-				method_counts_path = args.method_counts_path,
+				cut_profiles_path = group_paths['cut_profiles_path'],
+				id_counts_path = group_paths['id_counts_path'],
+				method_counts_path = group_paths['method_counts_path'],
 				output_dir = args.output_dir,
 				output_name = args.output_name
 				)
 
 		elif args.workflow == "auto":
-			if args.cut_id_detail_path is None:
-				parser.error("--workflow auto requires --cut_id_detail_path")
 
-			if args.feature_weights and len(args.feature_weights) != len(args.distance_cols):
-				parser.error("--feature_weights length must match --distance_cols length")
-
+		
 			rank_sites_auto(
-				cut_profiles_path = args.cut_profiles_path,
-				cut_id_detail_path = args.cut_id_detail_path,
-				distance_cols = args.distance_cols,
+				cut_profiles_path = group_paths['cut_profiles_path'],
+				cut_id_detail_path = group_paths['cut_id_detail_path'],
+				group_samplesheet_path = group_paths['group_samplesheet_path'],
+				feature_driver_path = args.feature_driver_path,
 				magnitude_transform = args.magnitude_transform,
 				magnitude_aggregation = args.magnitude_aggregation,
 				tau = args.tau,

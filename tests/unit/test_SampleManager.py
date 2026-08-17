@@ -43,18 +43,18 @@ def test_uuid_generation(load_default_sample_manager_test_input):
 	print(samples.table)
 
 
-def test_enforce_measurement_type(load_default_sample_manager_test_input):
-	"""
-	pytest -sv tests/unit/test_SampleManager.py::test_enforce_measurement_type
-	"""
+# def test_enforce_measurement_type(load_default_sample_manager_test_input):
+# 	"""
+# 	pytest -sv tests/unit/test_SampleManager.py::test_enforce_measurement_type
+# 	"""
 
-	samples = load_default_sample_manager_test_input
+# 	samples = load_default_sample_manager_test_input
 
-	samples.enforce_measurement_type()
+# 	samples.enforce_measurement_type()
 
-	with pytest.raises(ValueError, match = 'not a valid measurment type.'):
-		samples.table['measurement_type'] = 'wrong'
-		samples.enforce_measurement_type()
+# 	with pytest.raises(ValueError, match = 'not a valid measurment type.'):
+# 		samples.table['measurement_type'] = 'wrong'
+# 		samples.enforce_measurement_type()
 
 
 def test_write_samples_by_group(load_default_sample_manager_test_input, setup_temp_dir):
@@ -85,7 +85,7 @@ def test_ensemble_method(load_default_sample_manager_test_input, setup_temp_dir)
 
 	samples.assign_unique_id()
 
-	samples.enforce_measurement_type()
+	# samples.enforce_measurement_type()
 
 	samples.write_samples_by_group()
 

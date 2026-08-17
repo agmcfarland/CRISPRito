@@ -41,7 +41,7 @@ def setup_logging(log_path):
 			pass
 
 	sys.stdout = StreamToLogger(root_logger, logging.INFO)
-	sys.stderr = StreamToLogger(root_logger, logging.ERROR)
+	sys.stderr = StreamToLogger(root_logger, logging.INFO)
 
 def alignment_levenshtein(observed, reference):
     """
@@ -197,9 +197,10 @@ def central_tendency(measurement: pd.core.series.Series):
 def report_time(func):
 	def wrapper(*args, **kwargs):
 		time_start = time.time()
-		print('Start:', func)
+		print(f'Starting: {func}')
 		result = func(*args, **kwargs)
-		print('End:', func, time.time()-time_start)
+		end_time = time.time()-time_start
+		print(f'Finished: {func} in {round(end_time/60, 2)} minutes')
 		return result
 	return wrapper
 

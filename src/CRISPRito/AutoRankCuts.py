@@ -344,7 +344,7 @@ class AutoRankCuts:
 		# Prepare output
 		df = self.cut_profile.copy()
 
-		df = df[['cut_cluster', 'chromosome', 'strand', 'cut', 'nearest_gene']]
+		df = df[['cut_cluster', 'chromosome', 'strand', 'cut']]
 
 		df = df.merge(
 			self.priority_index,

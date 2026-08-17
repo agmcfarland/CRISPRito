@@ -40,14 +40,15 @@ test = ["pytest", "pytest-cov"]
 "Homepage" = "https://github.com/agmcfarland/CRISPRito/"
 "Bug Reports" = "https://github.com/agmcfarland/CRISPRito/issues"
 "Source" = "https://github.com/agmcfarland/CRISPRito/"
+
 [project.scripts]
+crisprito-cluster-cuts = "CRISPRito.CRISPRito:main"
+crisprito-setup = "CRISPRito.SetupRun:main"
+crisprito-process-group = "CRISPRito.ProcessGroup:main"
+crisprito-rank-sites = "CRISPRito.RankSites:main"
+crisprito-test = "CRISPRito.IntegrationTest:main"
 
-setup_run = "CRISPRito.SetupRun:main"
-process_group = "CRISPRito.ProcessGroup:main"
-rank_sites = "CRISPRito.RankSites:main"
-CRISPRito = "CRISPRito.CRISPRito:main"
 [tool.setuptools.packages.find]
-
 where = ["src"]
 
 [build-system]

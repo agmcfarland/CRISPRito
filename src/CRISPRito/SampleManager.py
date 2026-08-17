@@ -4,10 +4,10 @@ import os
 from os.path import join as pjoin
 
 class SampleManager:
-	allowed_measurements = [
-		'one_scaled',
-		'abundance'
-	]
+	# allowed_measurements = [
+	# 	'one_scaled',
+	# 	'abundance'
+	# ]
 	def __init__(self, sample_sheet_path, output_dir="CRISPRito_output"):
 		"""
 		Initializes the SampleManager with an input file path.
@@ -25,10 +25,10 @@ class SampleManager:
 		"""Reads the input file into a pandas DataFrame and assigns unique IDs."""
 		self.table["id"] = [str(uuid.uuid4()) for _ in range(len(self.table))]
 
-	def enforce_measurement_type(self):
-		for i in self.table['measurement_type'].unique():
-			if i not in self.allowed_measurements:
-				raise ValueError(f'{i} not a valid measurment type.')
+	# def enforce_measurement_type(self):
+	# 	for i in self.table['measurement_type'].unique():
+	# 		if i not in self.allowed_measurements:
+	# 			raise ValueError(f'{i} not a valid measurment type.')
 
 	def write_samples_by_group(self):
 		unique_groups = list(self.table['cluster_group'].unique())
@@ -41,7 +41,7 @@ class SampleManager:
 		
 		self.assign_unique_id()
 		
-		self.enforce_measurement_type()
+		# self.enforce_measurement_type()
 
 		self.write_samples_by_group()
 
