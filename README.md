@@ -1,2 +1,1 @@
-# CRISPRito
-
+<img src="docs/logo.png" alt="Logo" width=1000>

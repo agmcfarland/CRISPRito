@@ -1,28 +1,26 @@
 package:
   name: "crisprito"
   version: "1.0.0"
-
 source:
   path: ..
-
 build:
   noarch: python
   number: 0
-  script: "python -m pip install -e . --no-deps --no-build-isolation -vv"
+  script: "python -m pip install . --no-deps --no-build-isolation -vv"
   entry_points:
-    - setup_run = CRISPRito.SetupRun:main
-    - process_group = CRISPRito.ProcessGroup:main
-    - rank_sites = CRISPRito.RankSites:main
-    - CRISPRito = CRISPRito.CRISPRito:main
-
+    - crisprito-cluster-cuts = CRISPRito.CRISPRito:main
+    - crisprito-setup = CRISPRito.SetupRun:main
+    - crisprito-process-group = CRISPRito.ProcessGroup:main
+    - crisprito-rank-sites = CRISPRito.RankSites:main
+    - crisprito-test = CRISPRito.IntegrationTest:main
 requirements:
   host:
-    - python >=3.10
+    - python >=3.10,<3.13
     - pip
     - setuptools >=61.0.0
     - wheel
   run:
-    - python >=3.10
+    - python >=3.10,<3.13
     - biopython ==1.85
     - numpy ==2.2.5
     - pandas
@@ -31,26 +29,22 @@ requirements:
     - pyranges ==0.1.4
     - scikit-learn ==1.6.1
     - tqdm
-
-build:
-  entry_points:
-    - crisprito-cluster-cuts = CRISPRito.CRISPRito:main
-    - crisprito-setup = CRISPRito.SetupRun:main
-    - crisprito-process-group = CRISPRito.ProcessGroup:main
-    - crisprito-rank-sites = CRISPRito.RankSites:main
-    - crisprito-test = CRISPRito.IntegrationTest:main
-
 test:
+  imports:
+    - CRISPRito
   commands:
+    - python -c "from Bio.Seq import Seq"
+    - python -c "from skbio import DNA; from skbio.alignment import global_pairwise_align_nucleotide"
+    - python -c "import pyranges as pr; assert pr.__version__ == '0.1.4'"
+    - python -c "from CRISPRito.AutoRankCuts import AutoRankCuts"
+    - python -c "from CRISPRito.StandardCutRank import StandardCutRank"
     - crisprito-cluster-cuts --help
     - crisprito-rank-sites --help
     - crisprito-test --help
-
 about:
   home: "https://github.com/agmcfarland/CRISPRito"
   license: MIT  # match your actual license
   summary: "Multi method CRISPR cut standardization, combination, annotation, and prioritizer."
-
 extra:
   recipe-maintainers:
     - agmcfarland

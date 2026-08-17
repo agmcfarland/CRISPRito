@@ -6,7 +6,7 @@ import os
 import subprocess
 
 
-def pull_data(test_dir, data_dir):
+def pull_data(test_dir, data_dir, server_path):
 	"""
 	Performs all operations needed for the base inputs to cluster_cuts and rank_sites
 	"""
@@ -19,6 +19,7 @@ def pull_data(test_dir, data_dir):
 
 	# # Download data
 	# os.system(f'wget https://microb191.med.upenn.edu/crisprito_integration_test.tar.gz -P {test_dir}')
+	# os.system(f'wget {server_path} -P {test_dir}')
 
 	# stand in for download data
 	os.system(
@@ -59,6 +60,12 @@ def main():
 		choices = ['pull_data', 'cluster_cuts', 'auto_rank_sites'], 
 		required = True,
 		help = "Workflow to test"
+		)
+	parser.add_argument(
+		'--server_path',
+		default = 'https://microb191.med.upenn.edu/crisprito_integration_test.tar.gz',
+		required = True,
+		help = ''
 		)
 
 	args = parser.parse_args()

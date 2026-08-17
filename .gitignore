@@ -1,6 +1,5 @@
 
 .DS_Store
-/docs
 sftp-config.json
 /scratch
 /tests/temp

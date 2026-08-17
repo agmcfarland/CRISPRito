@@ -3,7 +3,7 @@ name = "CRISPRito"
 version = "1.0.0"
 description = "Multi method CRISPR cut standardization, combination, annotation, and prioritizer."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 #license = {file = "LICENSE"}
 authors = [
 	{name = "Alexander McFarland"}
