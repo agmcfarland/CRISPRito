@@ -1,7 +1,7 @@
 <img src="docs/logo.png" alt="Logo" width=1000>
 
 
-`CRISPRito` is a pipeline that takes CRISPR cut coordinates from many methods and/or replicates and does two things:
+`CRISPRito` is a pipeline that takes CRISPR cut coordinates generated from many methods and/or replicates and does two things:
 
 1. Clusters all cut coordinates to calculate overlapping observations and scoring statistics
 
