@@ -3,9 +3,9 @@
 
 `CRISPRito` is a pipeline that takes CRISPR cut coordinates from many methods and/or replicates and does two things:
 
-1. Cluster all cut coordinates to calculate overlap
+1. Clusters all cut coordinates to calculate overlapping observations and scoring statistics
 
-2. Produce a ranked table of the most commonly observed and highly scored cut sites
+2. Produces a ranked table of cut sites, roughly ordered by number of overlapping observations and aggregated strength of scoring
 
 # Installation
 
@@ -18,6 +18,10 @@ conda create -n crisprito_env -c agmcfarland -c conda-forge -c bioconda crisprit
 # Verify installation
 
 Run all three commands. Please ensure `/path/to/testdir` does not exist prior to running.
+
+* All input files will be in `/path/to/testdir/`
+
+All CRISPRito outputs will be in `/path/to/testdir/crisprito_output`
 
 ```sh
 conda activate crisprito_env
