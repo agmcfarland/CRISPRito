@@ -17,16 +17,18 @@ conda create -n crisprito_env -c agmcfarland -c conda-forge -c bioconda crisprit
 
 # Verify installation
 
-Run all three commands 
+Run all three commands. Please ensure `/path/to/testdir` does not exist prior to running.
 
 ```sh
 conda activate crisprito_env
 
-crisprito-test --test_dir /data/test_crisprito/setup_test --test_workflow pull_data
+test_workdir=/path/to/testdir
 
-crisprito-test --test_dir /data/test_crisprito/setup_test --test_workflow cluster_cuts
+crisprito-test --test_dir $test_workdir --test_workflow pull_data
 
-crisprito-test --test_dir /data/test_crisprito/setup_test --test_workflow auto_rank_sites
+crisprito-test --test_dir $test_workdir --test_workflow cluster_cuts
+
+crisprito-test --test_dir $test_workdir --test_workflow auto_rank_sites
 ```
 
 
