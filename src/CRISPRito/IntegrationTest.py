@@ -19,12 +19,12 @@ def pull_data(test_dir, data_dir, server_path):
 
 	# # Download data
 	# os.system(f'wget https://microb191.med.upenn.edu/crisprito_integration_test.tar.gz -P {test_dir}')
-	# os.system(f'wget {server_path} -P {test_dir}')
+	os.system(f'wget {server_path} -P {test_dir}')
 
 	# stand in for download data
-	os.system(
-		'ln -s /data/test_crisprito/crisprito_integration_test.tar.gz /data/test_crisprito/setup_test/crisprito_integration_test.tar.gz'
-		)
+	# os.system(
+	# 	'ln -s /data/test_crisprito/crisprito_integration_test.tar.gz /data/test_crisprito/setup_test/crisprito_integration_test.tar.gz'
+	# 	)
 	# # Untar
 	os.system(f'tar -xzf {pjoin(test_dir, "crisprito_integration_test.tar.gz")} -C {test_dir}')
 
@@ -64,8 +64,7 @@ def main():
 	parser.add_argument(
 		'--server_path',
 		default = 'https://microb191.med.upenn.edu/crisprito_integration_test.tar.gz',
-		required = True,
-		help = ''
+		help = 'Path to test data host.'
 		)
 
 	args = parser.parse_args()
@@ -79,7 +78,7 @@ def main():
 	crisprito_output_dir = pjoin(test_dir, 'crisprito_output')
 
 	if args.test_workflow == 'pull_data':
-		pull_data(test_dir = test_dir, data_dir = data_dir)
+		pull_data(test_dir = test_dir, data_dir = data_dir, server_path = args.server_path)
 
 	elif args.test_workflow == 'cluster_cuts':
 
